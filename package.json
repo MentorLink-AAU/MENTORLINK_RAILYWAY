@@ -1,0 +1,16 @@
+{
+  "name": "mentorlink",
+  "private": true,
+  "version": "1.0.0",
+  "description": "MentorLink - University Mentorship Platform",
+  "scripts": {
+    "start": "concurrently -n backend,frontend,nlp -c blue,green,magenta \"npm run start:backend\" \"npm run start:frontend\" \"npm run start:nlp\"",
+    "start:backend": "cd backend && mvn spring-boot:run",
+    "start:frontend": "cd frontend && npm run dev",
+    "start:nlp": "cd backend/nlp-summarization && python app.py",
+    "setup": "npm install && cd frontend && npm install && cd ../backend/nlp-summarization && pip install -r requirements.txt"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
