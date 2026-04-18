@@ -1,5 +1,5 @@
 /** Admin: auto-group from Excel or leftover students, assign faculty. */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
   autoGroupFromExcel,
@@ -10,8 +10,11 @@ import {
   downloadFacultyExcel,
 } from '../lib/api';
 import { Users, FileSpreadsheet, Calendar, CheckCircle2, AlertCircle, Download } from 'lucide-react';
+import { Button } from '../components/ui/Button';
 
 export function AdminAutoGroup() {
+  const studentsFileRef = useRef(null);
+  const facultyFileRef = useRef(null);
   const [studentsFile, setStudentsFile] = useState(null);
   const [facultyFile, setFacultyFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -218,24 +221,58 @@ export function AdminAutoGroup() {
             </p>
             <form onSubmit={handleExcelSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-blue-900 mb-1">Students file (required)</label>
+                <span className="mb-1 block text-sm font-medium text-blue-900">Students file (required)</span>
                 <input
+                  ref={studentsFileRef}
+                  id="autogroup-students-file"
                   type="file"
                   accept=".xlsx,.xls"
-                  onChange={(e) => setStudentsFile(e.target.files?.[0])}
-                  className="w-full text-sm"
+                  className="sr-only"
+                  onChange={(e) => setStudentsFile(e.target.files?.[0] ?? null)}
                 />
-                <p className="text-xs text-gray-500 mt-1">Cols: Email, RollNumber. Use downloaded file or same format.</p>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="md"
+                    className="w-full sm:w-auto"
+                    onClick={() => studentsFileRef.current?.click()}
+                  >
+                    <FileSpreadsheet className="h-4 w-4" />
+                    {studentsFile ? 'Change students file' : 'Choose file to upload — click here'}
+                  </Button>
+                  <span className="truncate text-sm text-gray-600" title={studentsFile?.name}>
+                    {studentsFile ? studentsFile.name : 'No file chosen'}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-gray-500">Cols: Email, RollNumber. Use downloaded file or same format.</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-blue-900 mb-1">Faculty file (optional)</label>
+                <span className="mb-1 block text-sm font-medium text-blue-900">Faculty file (optional)</span>
                 <input
+                  ref={facultyFileRef}
+                  id="autogroup-faculty-file"
                   type="file"
                   accept=".xlsx,.xls"
-                  onChange={(e) => setFacultyFile(e.target.files?.[0])}
-                  className="w-full text-sm"
+                  className="sr-only"
+                  onChange={(e) => setFacultyFile(e.target.files?.[0] ?? null)}
                 />
-                <p className="text-xs text-gray-500 mt-1">If provided, only these faculty are assigned. Otherwise all faculty with slots.</p>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="md"
+                    className="w-full sm:w-auto"
+                    onClick={() => facultyFileRef.current?.click()}
+                  >
+                    <FileSpreadsheet className="h-4 w-4" />
+                    {facultyFile ? 'Change faculty file' : 'Choose file to upload — click here'}
+                  </Button>
+                  <span className="truncate text-sm text-gray-600" title={facultyFile?.name}>
+                    {facultyFile ? facultyFile.name : 'No file chosen'}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-gray-500">If provided, only these faculty are assigned. Otherwise all faculty with slots.</p>
               </div>
               <button
                 type="submit"

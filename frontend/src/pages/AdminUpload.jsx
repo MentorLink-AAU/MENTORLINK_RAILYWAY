@@ -1,12 +1,19 @@
 /** Admin: bulk upload students or faculty via Excel. */
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { Upload, FileSpreadsheet } from 'lucide-react';
 import { uploadStudents, uploadFaculty } from '../lib/api';
+import { PageHeader } from '../components/ui/PageHeader';
+import { Card, CardContent } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Alert } from '../components/ui/Alert';
+import { Select } from '../components/ui/Select';
 
 export function AdminUpload() {
   const [type, setType] = useState('students');
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const fileInputRef = useRef(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -14,9 +21,8 @@ export function AdminUpload() {
     setLoading(true);
     setResult(null);
     try {
-      const res = type === 'students'
-        ? await uploadStudents(file)
-        : await uploadFaculty(file);
+      const res =
+        type === 'students' ? await uploadStudents(file) : await uploadFaculty(file);
       setResult(res.data?.data);
     } catch (err) {
       setResult({ error: err.response?.data?.error?.message || 'Upload failed' });
@@ -27,69 +33,96 @@ export function AdminUpload() {
 
   const studentCols = 'Email | FullName | RollNumber | Department | YearOfStudy | Skills | Password';
   const facultyCols = 'Email | FullName | Department | Expertise | MaxGroups | Password';
+  const canSubmit = !!file && !loading;
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold text-blue-900">Bulk Upload</h1>
-      <p className="text-gray-600 text-sm">
-        Upload Excel to create users. Include <strong>Password</strong> so users can log in immediately.
-        Students not in the list can still <strong>register manually</strong> via the Register page.
-      </p>
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg border border-blue-100 p-6 space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg border border-blue-200"
-          >
-            <option value="students">Students</option>
-            <option value="faculty">Faculty</option>
-          </select>
-        </div>
-        <div className="p-4 rounded-lg bg-blue-50 text-sm text-blue-800">
-          <p className="font-medium mb-2">
-            {type === 'students' ? 'Students format:' : 'Faculty format:'}
+    <div className="mx-auto max-w-2xl space-y-6">
+      <PageHeader
+        title="Bulk upload"
+        description="Import students or faculty from Excel whenever you are ready."
+      />
+
+      <Card variant="glass">
+        <CardContent className="space-y-4 p-6">
+          <p className="text-sm text-mentor-muted">
+            Include <strong className="text-mentor-text">Password</strong> in the sheet when you want users to log in
+            immediately. Students not in the list can still register manually.
           </p>
-          <code className="block text-xs break-all">
-            {type === 'students' ? studentCols : facultyCols}
-          </code>
-          <p className="mt-2 text-blue-600">
-            Password is optional. If empty, a random password is set (user must reset via Profile).
-          </p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Excel File</label>
-          <input
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={(e) => setFile(e.target.files?.[0])}
-            className="w-full"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={loading || !file}
-          className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-        >
-          {loading ? 'Uploading...' : 'Upload'}
-        </button>
-      </form>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-mentor-text" htmlFor="upload-type">
+                Type
+              </label>
+              <Select id="upload-type" value={type} onChange={(e) => setType(e.target.value)}>
+                <option value="students">Students</option>
+                <option value="faculty">Faculty</option>
+              </Select>
+            </div>
+            <div className="rounded-xl border border-mentor-border/60 bg-mentor-surface/80 p-4 text-sm text-mentor-text">
+              <p className="mb-2 font-medium">
+                {type === 'students' ? 'Students format:' : 'Faculty format:'}
+              </p>
+              <code className="block break-all text-xs text-mentor-muted">
+                {type === 'students' ? studentCols : facultyCols}
+              </code>
+              <p className="mt-2 text-mentor-muted">
+                Password is optional. If empty, a random password is set (user must change on first login).
+              </p>
+            </div>
+            <div>
+              <span className="mb-2 block text-sm font-medium text-mentor-text">Excel file</span>
+              <input
+                ref={fileInputRef}
+                id="bulk-excel-file"
+                type="file"
+                accept=".xlsx,.xls"
+                className="sr-only"
+                onChange={(e) => {
+                  setFile(e.target.files?.[0] ?? null);
+                  setResult(null);
+                }}
+              />
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="md"
+                  className="w-full sm:w-auto"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <FileSpreadsheet className="h-4 w-4" />
+                  {file ? 'Change file' : 'Choose file to upload — click here'}
+                </Button>
+                <span className="truncate text-sm text-mentor-muted" title={file?.name}>
+                  {file ? file.name : 'No file chosen'}
+                </span>
+              </div>
+            </div>
+            <Button type="submit" variant="primary" size="lg" className="w-full" disabled={!canSubmit}>
+              <Upload className="h-4 w-4" />
+              {loading ? 'Uploading…' : 'Upload'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
       {result && !result.error && (
-        <div className="bg-blue-50 rounded-xl p-4 text-blue-800">
+        <Alert variant="success" title="Upload finished">
           <p>Created: {result.created ?? result.createdCount ?? 0}</p>
           <p>Skipped: {result.skipped ?? result.skippedCount ?? 0}</p>
           {result.errors?.length > 0 && (
-            <div className="mt-2 text-sm text-red-600">
+            <div className="mt-2 text-sm text-mentor-danger">
               {result.errors.slice(0, 5).map((e, i) => (
                 <p key={i}>{e}</p>
               ))}
             </div>
           )}
-        </div>
+        </Alert>
       )}
       {result?.error && (
-        <div className="bg-red-50 rounded-xl p-4 text-red-700">{result.error}</div>
+        <Alert variant="error" title="Upload failed">
+          {result.error}
+        </Alert>
       )}
     </div>
   );
