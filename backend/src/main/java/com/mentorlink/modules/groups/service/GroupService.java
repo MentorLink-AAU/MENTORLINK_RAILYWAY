@@ -36,6 +36,11 @@ public class GroupService {
         User leader = userRepository.findById(leaderId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "NOT_FOUND", "Leader (student) not found"));
 
+        if (!groupRepository.findByMembersContaining(leader).isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "ALREADY_IN_GROUP",
+                    "You are already in a group. Each student can only belong to one group.");
+        }
+
         Project project;
         if (dto.getProjectId() != null) {
             if (groupRepository.existsByProjectId(dto.getProjectId())) {
@@ -105,6 +110,13 @@ public class GroupService {
 
         if (group.getMembers().contains(student)) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "ALREADY_MEMBER", "You are already a member of this group.");
+        }
+
+        for (Group g : groupRepository.findByMembersContaining(student)) {
+            if (!g.getId().equals(group.getId())) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "ALREADY_IN_GROUP",
+                        "You are already in another group. Each student can only belong to one group.");
+            }
         }
 
         group.getMembers().add(student);

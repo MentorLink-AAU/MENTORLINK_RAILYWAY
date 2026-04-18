@@ -19,6 +19,7 @@ export function Projects() {
   }, []);
 
   const project = data?.assignedProject;
+  const group = data?.group;
   const available = useMemo(() => {
     const list = data?.availableProjects;
     return Array.isArray(list) ? list : [];
@@ -105,7 +106,7 @@ export function Projects() {
         <p className="text-center text-sm text-mentor-muted">No projects match your search.</p>
       )}
 
-      {!project && available.length === 0 && (
+      {!project && available.length === 0 && !group && (
         <div className="bg-white rounded-2xl shadow-lg border border-blue-100 p-8 animate-fade-in-up hover-lift" style={{ animationDelay: '0.1s', opacity: 0 }}>
           <h2 className="font-semibold text-blue-900 mb-4">Get started</h2>
           <p className="text-gray-600 text-sm mb-6">
@@ -126,6 +127,23 @@ export function Projects() {
             </Link>
           </div>
         </div>
+      )}
+
+      {!project && available.length === 0 && group && (
+        <Card variant="glass" className="animate-fade-in-up">
+          <CardContent className="p-6">
+            <h2 className="mb-2 font-semibold text-mentor-text">No project assigned yet</h2>
+            <p className="mb-4 text-sm text-mentor-muted">
+              You are in a group. When your mentor assigns a project, it will appear here.
+            </p>
+            <Link
+              to={`/groups/${group.groupId}`}
+              className="inline-flex text-sm font-medium text-mentor-primary hover:underline"
+            >
+              Open your group →
+            </Link>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

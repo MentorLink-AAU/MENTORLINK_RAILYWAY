@@ -93,6 +93,11 @@ public class ProjectService {
         User leader = userRepository.findByEmail(creatorEmail)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "NOT_FOUND", "User not found"));
 
+        if (!groupRepository.findByMembersContaining(leader).isEmpty()) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "ALREADY_IN_GROUP",
+                    "You already belong to a group. You cannot create another project/group.");
+        }
+
         Project project = Project.builder()
                 .title(dto.getTitle())
                 .description(dto.getDescription())

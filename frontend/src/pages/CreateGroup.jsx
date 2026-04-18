@@ -1,10 +1,11 @@
 /** Create group: name, project title/description, generates join tokens. */
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { createGroup } from '../lib/api';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { createGroup, getProfile } from '../lib/api';
 import { Copy, Check, Users } from 'lucide-react';
 
 export function CreateGroup() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     name: '',
     projectTitle: '',
@@ -16,6 +17,14 @@ export function CreateGroup() {
   const [error, setError] = useState('');
   const [createdGroup, setCreatedGroup] = useState(null);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    getProfile()
+      .then((res) => {
+        if (res.data?.data?.group) navigate('/student/groups', { replace: true });
+      })
+      .catch(() => {});
+  }, [navigate]);
 
   const update = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 

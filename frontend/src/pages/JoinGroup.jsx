@@ -1,7 +1,7 @@
 /** Join group: student or faculty (mentor) join via token. */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { joinGroup, mentorJoinGroup } from '../lib/api';
+import { joinGroup, mentorJoinGroup, getProfile } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 
 export function JoinGroup() {
@@ -11,9 +11,18 @@ export function JoinGroup() {
   const [isMentor, setIsMentor] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { isFaculty } = useAuth();
+  const { isFaculty, isStudent } = useAuth();
 
   const initialToken = searchParams.get('token') || '';
+
+  useEffect(() => {
+    if (!isStudent) return;
+    getProfile()
+      .then((res) => {
+        if (res.data?.data?.group) navigate('/student/groups', { replace: true });
+      })
+      .catch(() => {});
+  }, [isStudent, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -1,4 +1,4 @@
-/** Student hub: my group, create, join — single entry from sidebar "Groups". */
+/** Student hub: single group — open current group, or create/join until you have one. */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getProfile } from '../lib/api';
@@ -34,17 +34,21 @@ export function StudentGroups() {
     <div className="space-y-8">
       <PageHeader
         title="Groups"
-        description="Create a new group, join with an invite token, or open your current group."
+        description={
+          group
+            ? 'You belong to one project group. Open it below — you cannot create or join another.'
+            : 'Create a new group or join with an invite token. After you have a group, those options are hidden.'
+        }
       />
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className={`grid gap-6 ${group ? 'md:grid-cols-1' : 'md:grid-cols-3'}`}>
         {group && (
-          <Card variant="glass" className="md:col-span-1">
+          <Card variant="glass" className="max-w-lg">
             <CardContent className="flex h-full flex-col justify-between space-y-4 py-6">
               <div>
                 <div className="mb-2 flex items-center gap-2 text-mentor-primary">
                   <Users className="h-5 w-5" />
-                  <span className="text-xs font-semibold uppercase tracking-wide">Current group</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide">Your group</span>
                 </div>
                 <h3 className="text-lg font-semibold text-mentor-text">{group.name}</h3>
                 <p className="mt-1 text-sm text-mentor-muted">{group.projectTitle}</p>
@@ -57,39 +61,43 @@ export function StudentGroups() {
           </Card>
         )}
 
-        <Card variant="glass">
-          <CardContent className="flex h-full flex-col justify-between space-y-4 py-6">
-            <div>
-              <div className="mb-2 flex items-center gap-2 text-mentor-primary">
-                <PlusCircle className="h-5 w-5" />
-                <span className="text-xs font-semibold uppercase tracking-wide">Start new</span>
-              </div>
-              <h3 className="text-lg font-semibold text-mentor-text">Create group</h3>
-              <p className="mt-1 text-sm text-mentor-muted">
-                Start a project group and invite teammates with a token.
-              </p>
-            </div>
-            <Button variant="secondary" size="sm" as={Link} to="/groups/create">
-              Create group
-            </Button>
-          </CardContent>
-        </Card>
+        {!group && (
+          <>
+            <Card variant="glass">
+              <CardContent className="flex h-full flex-col justify-between space-y-4 py-6">
+                <div>
+                  <div className="mb-2 flex items-center gap-2 text-mentor-primary">
+                    <PlusCircle className="h-5 w-5" />
+                    <span className="text-xs font-semibold uppercase tracking-wide">Start new</span>
+                  </div>
+                  <h3 className="text-lg font-semibold text-mentor-text">Create group</h3>
+                  <p className="mt-1 text-sm text-mentor-muted">
+                    Start a project group and invite teammates with a token.
+                  </p>
+                </div>
+                <Button variant="secondary" size="sm" as={Link} to="/groups/create">
+                  Create group
+                </Button>
+              </CardContent>
+            </Card>
 
-        <Card variant="glass">
-          <CardContent className="flex h-full flex-col justify-between space-y-4 py-6">
-            <div>
-              <div className="mb-2 flex items-center gap-2 text-mentor-primary">
-                <LogIn className="h-5 w-5" />
-                <span className="text-xs font-semibold uppercase tracking-wide">Join</span>
-              </div>
-              <h3 className="text-lg font-semibold text-mentor-text">Join with token</h3>
-              <p className="mt-1 text-sm text-mentor-muted">Use an invite link or token from your team lead.</p>
-            </div>
-            <Button variant="outline" size="sm" as={Link} to="/groups/join">
-              Join group
-            </Button>
-          </CardContent>
-        </Card>
+            <Card variant="glass">
+              <CardContent className="flex h-full flex-col justify-between space-y-4 py-6">
+                <div>
+                  <div className="mb-2 flex items-center gap-2 text-mentor-primary">
+                    <LogIn className="h-5 w-5" />
+                    <span className="text-xs font-semibold uppercase tracking-wide">Join</span>
+                  </div>
+                  <h3 className="text-lg font-semibold text-mentor-text">Join with token</h3>
+                  <p className="mt-1 text-sm text-mentor-muted">Use an invite link or token from your team lead.</p>
+                </div>
+                <Button variant="outline" size="sm" as={Link} to="/groups/join">
+                  Join group
+                </Button>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       {!group && (
