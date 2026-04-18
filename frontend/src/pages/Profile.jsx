@@ -3,24 +3,25 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getProfile, updateProfile, uploadProfilePhoto } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
-import {
-  User,
-  Camera,
-  Loader2,
-  Users,
-  GraduationCap,
-  CheckCircle,
-  AlertCircle,
-} from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { User, Camera, Loader2, Users, GraduationCap } from 'lucide-react';
 import { AuthImage } from '../components/AuthImage';
+import { PageHeader } from '../components/ui/PageHeader';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Textarea } from '../components/ui/Textarea';
+import { Alert } from '../components/ui/Alert';
+import { Loader } from '../components/ui/Loader';
 
 export function Profile() {
-  const { user, refreshUser, isStudent, isFaculty, isAdmin } = useAuth();
+  const { user, refreshUser, isStudent, isFaculty } = useAuth();
+  const { toast } = useToast();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [message, setMessage] = useState({ type: null, text: '' });
+  const [error, setError] = useState('');
   const [form, setForm] = useState({
     fullName: '',
     contactNumber: '',
@@ -54,14 +55,13 @@ export function Profile() {
       })
       .catch(() => setProfile(null))
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only load; API response drives form
   }, []);
-
-  const clearMessage = () => setMessage({ type: null, text: '' });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    clearMessage();
+    setError('');
     try {
       const payload = {
         fullName: form.fullName?.trim() || undefined,
@@ -79,13 +79,11 @@ export function Profile() {
       await refreshUser();
       const res = await getProfile();
       setProfile(res.data?.data);
-      setMessage({ type: 'success', text: 'Profile updated successfully' });
-      setTimeout(clearMessage, 3000);
+      toast.success('Profile updated successfully');
     } catch (e) {
-      setMessage({
-        type: 'error',
-        text: e.response?.data?.error?.message || 'Failed to update profile',
-      });
+      const msg = e.response?.data?.error?.message || 'Failed to update profile';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -95,16 +93,17 @@ export function Profile() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingPhoto(true);
-    clearMessage();
+    setError('');
     try {
       await uploadProfilePhoto(file);
       await refreshUser();
       const res = await getProfile();
       setProfile(res.data?.data);
-      setMessage({ type: 'success', text: 'Photo updated' });
-      setTimeout(clearMessage, 3000);
+      toast.success('Photo updated');
     } catch {
-      setMessage({ type: 'error', text: 'Failed to upload photo' });
+      const msg = 'Failed to upload photo';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setUploadingPhoto(false);
     }
@@ -113,7 +112,7 @@ export function Profile() {
   if (loading) {
     return (
       <div className="flex justify-center py-20">
-        <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full" />
+        <Loader size="lg" />
       </div>
     );
   }
@@ -122,39 +121,22 @@ export function Profile() {
   const baseUrl = import.meta.env.VITE_API_URL || '';
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
-      <h1 className="text-2xl font-bold text-blue-900">Profile</h1>
+    <div className="mx-auto max-w-2xl space-y-8">
+      <PageHeader title="Profile" description="Manage your account details and visibility." />
 
-      {message.text && (
-        <div
-          className={`flex items-center gap-2 px-4 py-3 rounded-lg ${
-            message.type === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-700'
-          }`}
-        >
-          {message.type === 'success' ? (
-            <CheckCircle className="w-5 h-5 shrink-0" />
-          ) : (
-            <AlertCircle className="w-5 h-5 shrink-0" />
-          )}
-          <span>{message.text}</span>
-        </div>
-      )}
+      {error && <Alert variant="error">{error}</Alert>}
 
-      <div className="bg-white rounded-2xl shadow-lg border border-blue-100 p-6">
-        <div className="flex flex-col sm:flex-row items-center gap-6">
+      <Card>
+        <CardContent className="flex flex-col items-center gap-6 py-6 sm:flex-row">
           <div className="relative">
-            <div className="w-28 h-28 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
+            <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-mentor-surface">
               {photoUrl ? (
-                <AuthImage
-                  src={baseUrl + photoUrl}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
+                <AuthImage src={baseUrl + photoUrl} alt="" className="h-full w-full object-cover" />
               ) : (
-                <User className="w-14 h-14 text-blue-600" />
+                <User className="h-14 w-14 text-mentor-primary" />
               )}
             </div>
-            <label className="absolute bottom-0 right-0 p-2 bg-blue-600 text-white rounded-full cursor-pointer hover:bg-blue-700 disabled:opacity-50">
+            <label className="absolute bottom-0 right-0 cursor-pointer rounded-full bg-mentor-primary p-2 text-white shadow-md hover:bg-mentor-primary-dark disabled:opacity-50">
               <input
                 type="file"
                 accept="image/*"
@@ -162,199 +144,164 @@ export function Profile() {
                 onChange={handlePhotoUpload}
                 disabled={uploadingPhoto}
               />
-              {uploadingPhoto ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Camera className="w-4 h-4" />
-              )}
+              {uploadingPhoto ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
             </label>
           </div>
-          <div className="text-center sm:text-left flex-1">
-            <h2 className="text-xl font-semibold text-blue-900">
-              {profile?.fullName || user?.fullName || '—'}
-            </h2>
-            <p className="text-gray-600">{profile?.email || user?.email}</p>
-            <p className="text-sm text-blue-600 mt-1">
-              {profile?.department || user?.department || '—'}
-            </p>
+          <div className="flex-1 text-center sm:text-left">
+            <h2 className="text-xl font-semibold text-mentor-text">{profile?.fullName || user?.fullName || '—'}</h2>
+            <p className="text-mentor-muted">{profile?.email || user?.email}</p>
+            <p className="mt-1 text-sm text-mentor-primary">{profile?.department || user?.department || '—'}</p>
             {isFaculty && profile?.maxGroups != null && (
-              <p className="text-sm text-gray-600 mt-2">
+              <p className="mt-2 text-sm text-mentor-muted">
                 Load: {profile.currentLoad ?? 0} / {profile.maxGroups} groups
               </p>
             )}
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Student: Assigned group & mentor */}
       {isStudent && (profile?.group || profile?.assignedMentor) && (
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           {profile?.group && (
-            <Link
-              to={`/groups/${profile.group.groupId}`}
-              className="block bg-white rounded-xl border border-blue-100 p-4 hover:border-blue-300 transition"
-            >
-              <div className="flex items-center gap-2 text-blue-900 font-medium mb-1">
-                <Users className="w-5 h-5" />
-                My Group
-              </div>
-              <p className="text-sm text-gray-600">{profile.group.name}</p>
-              <p className="text-xs text-blue-600 mt-1">
-                {profile.group.projectTitle} • {profile.group.memberCount} members
-              </p>
+            <Link to={`/groups/${profile.group.groupId}`}>
+              <Card className="h-full transition hover:border-mentor-primary/40 hover:shadow-md">
+                <CardContent className="py-5">
+                  <div className="mb-1 flex items-center gap-2 font-medium text-mentor-text">
+                    <Users className="h-5 w-5 text-mentor-primary" />
+                    My group
+                  </div>
+                  <p className="text-sm text-mentor-muted">{profile.group.name}</p>
+                  <p className="mt-1 text-xs text-mentor-primary">
+                    {profile.group.projectTitle} • {profile.group.memberCount} members
+                  </p>
+                </CardContent>
+              </Card>
             </Link>
           )}
           {profile?.assignedMentor && (
-            <div className="bg-white rounded-xl border border-blue-100 p-4">
-              <div className="flex items-center gap-2 text-blue-900 font-medium mb-1">
-                <GraduationCap className="w-5 h-5" />
-                Assigned Mentor
-              </div>
-              <p className="text-sm font-medium">{profile.assignedMentor.name}</p>
-              <p className="text-xs text-gray-600">{profile.assignedMentor.department}</p>
-              <p className="text-xs text-blue-600 mt-1">{profile.assignedMentor.expertise}</p>
-            </div>
+            <Card>
+              <CardContent className="py-5">
+                <div className="mb-1 flex items-center gap-2 font-medium text-mentor-text">
+                  <GraduationCap className="h-5 w-5 text-mentor-primary" />
+                  Assigned mentor
+                </div>
+                <p className="text-sm font-medium text-mentor-text">{profile.assignedMentor.name}</p>
+                <p className="text-xs text-mentor-muted">{profile.assignedMentor.department}</p>
+                <p className="mt-1 text-xs text-mentor-primary">{profile.assignedMentor.expertise}</p>
+              </CardContent>
+            </Card>
           )}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg border border-blue-100 p-6 space-y-4">
-        <h2 className="font-semibold text-blue-900">Edit Profile</h2>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-          <input
-            type="text"
-            value={form.fullName || ''}
-            onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
-            className="w-full px-4 py-2 rounded-lg border border-blue-200 focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
-          <input
-            type="text"
-            value={form.contactNumber || ''}
-            onChange={(e) => setForm((f) => ({ ...f, contactNumber: e.target.value }))}
-            placeholder="+1 234 567 8900"
-            className="w-full px-4 py-2 rounded-lg border border-blue-200 focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {(isStudent || isFaculty) && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-            <input
+      <Card>
+        <CardHeader>
+          <CardTitle>Edit profile</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
               type="text"
-              value={form.department || ''}
-              onChange={(e) => setForm((f) => ({ ...f, department: e.target.value }))}
-              placeholder="Computer Science"
-              className="w-full px-4 py-2 rounded-lg border border-blue-200 focus:ring-2 focus:ring-blue-500"
+              label="Full name"
+              value={form.fullName || ''}
+              onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
             />
-          </div>
-        )}
-
-        {isStudent && (
-          <>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Roll Number</label>
-              <input
-                type="text"
-                value={form.rollNumber || ''}
-                onChange={(e) => setForm((f) => ({ ...f, rollNumber: e.target.value }))}
-                placeholder="e.g. 21BCS001"
-                className="w-full px-4 py-2 rounded-lg border border-blue-200 focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Year of Study</label>
-              <input
-                type="text"
-                value={form.yearOfStudy || ''}
-                onChange={(e) => setForm((f) => ({ ...f, yearOfStudy: e.target.value }))}
-                placeholder="1, 2, 3, or 4"
-                className="w-full px-4 py-2 rounded-lg border border-blue-200 focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </>
-        )}
-
-        {isFaculty && (
-          <>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Expertise</label>
-              <input
-                type="text"
-                value={form.expertise || ''}
-                onChange={(e) => setForm((f) => ({ ...f, expertise: e.target.value }))}
-                placeholder="Machine Learning, Web Dev"
-                className="w-full px-4 py-2 rounded-lg border border-blue-200 focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-              <input
-                type="text"
-                value={form.phoneNumber || ''}
-                onChange={(e) => setForm((f) => ({ ...f, phoneNumber: e.target.value }))}
-                placeholder="Faculty contact"
-                className="w-full px-4 py-2 rounded-lg border border-blue-200 focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </>
-        )}
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
-          <textarea
-            value={form.bio || ''}
-            onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
-            rows={3}
-            placeholder="Brief introduction..."
-            className="w-full px-4 py-2 rounded-lg border border-blue-200 focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {isStudent && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Skills (comma separated)
-            </label>
-            <input
+            <Input
               type="text"
-              value={form.skills || ''}
-              onChange={(e) => setForm((f) => ({ ...f, skills: e.target.value }))}
-              placeholder="React, Python, NLP"
-              className="w-full px-4 py-2 rounded-lg border border-blue-200 focus:ring-2 focus:ring-blue-500"
+              label="Contact number"
+              value={form.contactNumber || ''}
+              onChange={(e) => setForm((f) => ({ ...f, contactNumber: e.target.value }))}
+              placeholder="+1 234 567 8900"
             />
-          </div>
-        )}
 
-        {isStudent && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Interests (comma separated)
-            </label>
-            <input
-              type="text"
-              value={form.interests || ''}
-              onChange={(e) => setForm((f) => ({ ...f, interests: e.target.value }))}
-              placeholder="AI, Web development"
-              className="w-full px-4 py-2 rounded-lg border border-blue-200 focus:ring-2 focus:ring-blue-500"
+            {(isStudent || isFaculty) && (
+              <Input
+                type="text"
+                label="Department"
+                value={form.department || ''}
+                onChange={(e) => setForm((f) => ({ ...f, department: e.target.value }))}
+                placeholder="Computer Science"
+              />
+            )}
+
+            {isStudent && (
+              <>
+                <Input
+                  type="text"
+                  label="Roll number"
+                  value={form.rollNumber || ''}
+                  onChange={(e) => setForm((f) => ({ ...f, rollNumber: e.target.value }))}
+                  placeholder="e.g. 21BCS001"
+                />
+                <Input
+                  type="text"
+                  label="Year of study"
+                  value={form.yearOfStudy || ''}
+                  onChange={(e) => setForm((f) => ({ ...f, yearOfStudy: e.target.value }))}
+                  placeholder="1, 2, 3, or 4"
+                />
+              </>
+            )}
+
+            {isFaculty && (
+              <>
+                <Input
+                  type="text"
+                  label="Expertise"
+                  value={form.expertise || ''}
+                  onChange={(e) => setForm((f) => ({ ...f, expertise: e.target.value }))}
+                  placeholder="Machine Learning, Web Dev"
+                />
+                <Input
+                  type="text"
+                  label="Phone number"
+                  value={form.phoneNumber || ''}
+                  onChange={(e) => setForm((f) => ({ ...f, phoneNumber: e.target.value }))}
+                  placeholder="Faculty contact"
+                />
+              </>
+            )}
+
+            <Textarea
+              label="Bio"
+              value={form.bio || ''}
+              onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
+              rows={3}
+              placeholder="Brief introduction…"
             />
-          </div>
-        )}
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 font-medium"
-        >
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-          Save Changes
-        </button>
-      </form>
+            {isStudent && (
+              <>
+                <Input
+                  type="text"
+                  label="Skills (comma separated)"
+                  value={form.skills || ''}
+                  onChange={(e) => setForm((f) => ({ ...f, skills: e.target.value }))}
+                  placeholder="React, Python, NLP"
+                />
+                <Input
+                  type="text"
+                  label="Interests (comma separated)"
+                  value={form.interests || ''}
+                  onChange={(e) => setForm((f) => ({ ...f, interests: e.target.value }))}
+                  placeholder="AI, Web development"
+                />
+              </>
+            )}
+
+            <Button type="submit" variant="primary" disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving…
+                </>
+              ) : (
+                'Save changes'
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

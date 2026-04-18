@@ -7,14 +7,16 @@ export function AuthImage({ src, alt, className }) {
 
   useEffect(() => {
     if (!src || !src.includes('/api/')) {
-      setObjectUrl(src);
-      setError(false);
-      return;
+      const id = requestAnimationFrame(() => {
+        setObjectUrl(src);
+        setError(false);
+      });
+      return () => cancelAnimationFrame(id);
     }
     const token = localStorage.getItem('mentorlink_token');
     if (!token) {
-      setError(true);
-      return;
+      const id = requestAnimationFrame(() => setError(true));
+      return () => cancelAnimationFrame(id);
     }
     let url = null;
     fetch(src, { headers: { Authorization: `Bearer ${token}` } })

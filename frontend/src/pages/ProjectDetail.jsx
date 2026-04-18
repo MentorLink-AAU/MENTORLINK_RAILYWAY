@@ -23,6 +23,9 @@ import {
   proposeNewMeetingSchedule,
 } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import { FacultyRecommendationCards } from '../components/recommendations/FacultyRecommendationCards';
+import { Button } from '../components/ui/Button';
+import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import {
   FileText,
   Upload,
@@ -104,7 +107,9 @@ export function ProjectDetail() {
     const interval = setInterval(() => {
       getSummaries(projectId)
         .then((res) => setSummaries(res.data?.data || []))
-        .catch(() => {});
+        .catch(() => {
+          void 0;
+        });
     }, 8000); // every 8 seconds
     return () => clearInterval(interval);
   }, [projectId, hasPendingSummaries]);
@@ -156,14 +161,18 @@ export function ProjectDetail() {
       a.download = sub.originalFilename || 'download';
       a.click();
       URL.revokeObjectURL(url);
-    } catch {}
+    } catch {
+      void 0;
+    }
   };
 
   const fetchRecommendations = async () => {
     try {
       const res = await getRecommendations(projectId);
       setRecommendations(res.data?.data);
-    } catch {}
+    } catch {
+      void 0;
+    }
   };
 
   const handleAddMeeting = async (e) => {
@@ -766,7 +775,9 @@ export function ProjectDetail() {
                           try {
                             await deleteSubmission(s.id);
                             load();
-                          } catch {}
+                          } catch {
+                            void 0;
+                          }
                         }}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
                       >
@@ -850,25 +861,22 @@ export function ProjectDetail() {
       </div>
 
       {(isAdmin || isFaculty) && (
-        <div className="bg-white rounded-2xl shadow-lg border border-blue-100 p-6 animate-fade-in-up hover-lift" style={{ animationDelay: '0.3s', opacity: 0 }}>
-          <h2 className="font-semibold text-blue-900 mb-4">Mentor Recommendations</h2>
-          <button
-            onClick={fetchRecommendations}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Get Recommendations
-          </button>
-          {recommendations?.recommendedFaculty?.length > 0 && (
-            <ul className="mt-4 space-y-2">
-              {recommendations.recommendedFaculty.map((f, i) => (
-                <li key={f.facultyId || i} className="flex justify-between p-3 rounded-lg bg-blue-50">
-                  <span>{f.fullName} — {f.expertise}</span>
-                  <span className="text-blue-600">{Math.round((f.similarityScore || 0) * 100)}% match</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <Card variant="glass" className="animate-fade-in-up hover-lift" style={{ animationDelay: '0.3s', opacity: 0 }}>
+          <CardHeader>
+            <h2 className="text-base font-semibold text-mentor-text">Mentor recommendations</h2>
+            <p className="mt-1 text-sm text-mentor-muted">
+              AI-ranked faculty matches for this project (similarity scores).
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button type="button" variant="primary" size="sm" onClick={fetchRecommendations}>
+              Get recommendations
+            </Button>
+            {recommendations?.recommendedFaculty?.length > 0 && (
+              <FacultyRecommendationCards items={recommendations.recommendedFaculty} />
+            )}
+          </CardContent>
+        </Card>
       )}
     </div>
   );

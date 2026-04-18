@@ -32,7 +32,9 @@ export function AdminDeadlines() {
       const res = await getAdminDeadlines();
       setDeadlines(res.data?.data || []);
       setForm({ name: '', type: 'PROJECT_SUBMISSION', dueDate: '' });
-    } catch {}
+    } catch {
+      void 0;
+    }
     finally {
       setSaving(false);
     }
@@ -47,7 +49,9 @@ export function AdminDeadlines() {
       setDeadlines(res.data?.data || []);
       setExtendingId(null);
       setExtendDate('');
-    } catch {}
+    } catch {
+      void 0;
+    }
     finally {
       setSaving(false);
     }

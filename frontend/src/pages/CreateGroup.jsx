@@ -1,6 +1,6 @@
 /** Create group: name, project title/description, generates join tokens. */
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { createGroup } from '../lib/api';
 import { Copy, Check, Users } from 'lucide-react';
 
@@ -16,7 +16,6 @@ export function CreateGroup() {
   const [error, setError] = useState('');
   const [createdGroup, setCreatedGroup] = useState(null);
   const [copied, setCopied] = useState(false);
-  const navigate = useNavigate();
 
   const update = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 

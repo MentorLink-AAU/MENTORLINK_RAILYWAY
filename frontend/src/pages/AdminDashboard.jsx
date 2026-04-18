@@ -11,10 +11,22 @@ import {
   Search,
   ChevronDown,
   ChevronUp,
-  TriangleAlert,
+  Upload,
+  Sparkles,
 } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { PageHeader } from '../components/ui/PageHeader';
+import { StatCard } from '../components/ui/StatCard';
+import { Card, CardContent, CardHeader } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Alert } from '../components/ui/Alert';
+import { Loader } from '../components/ui/Loader';
+import { DashboardSkeleton } from '../components/ui/Skeleton';
+import { EmptyState } from '../components/common/EmptyState';
 
 export function AdminDashboard() {
+  const { toast } = useToast();
   const [data, setData] = useState(null);
   const [groups, setGroups] = useState([]);
   const [groupsLoading, setGroupsLoading] = useState(true);
@@ -43,21 +55,9 @@ export function AdminDashboard() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full" />
-      </div>
-    );
-  }
+  if (loading) return <DashboardSkeleton />;
 
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-red-700">
-        {error}
-      </div>
-    );
-  }
+  if (error) return <Alert variant="error">{error}</Alert>;
 
   const profile = data?.profile;
   const analytics = data?.analytics || {};
@@ -77,11 +77,14 @@ export function AdminDashboard() {
       setResetMessage('');
       const res = await resetYearlyData();
       setResetMessage(res.data?.data || 'Yearly data reset successfully.');
+      toast.success('Yearly data reset completed');
       setGroups([]);
       const dashboardRes = await getAdminDashboard();
       setData(dashboardRes.data?.data);
     } catch (e) {
-      setResetMessage(e.response?.data?.error?.message || 'Failed to reset yearly data.');
+      const msg = e.response?.data?.error?.message || 'Failed to reset yearly data.';
+      setResetMessage(msg);
+      toast.error(msg);
     } finally {
       setResetting(false);
     }
@@ -96,111 +99,101 @@ export function AdminDashboard() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-blue-900">
-          Admin Dashboard
-        </h1>
-        {unread > 0 && (
-          <Link
-            to="/notifications"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200"
-          >
-            <Bell className="w-4 h-4" />
-            {unread} unread
-          </Link>
-        )}
-      </div>
+      <PageHeader
+        title="Admin dashboard"
+        description={`Signed in as ${profile?.fullName || profile?.email || 'Admin'}`}
+        actions={
+          unread > 0 ? (
+            <Button variant="outline" size="sm" as={Link} to="/notifications">
+              <Bell className="h-4 w-4" />
+              {unread} unread
+            </Button>
+          ) : null
+        }
+      />
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map(({ label, value, icon: Icon }) => (
-          <div
-            key={label}
-            className="bg-white rounded-2xl shadow-lg border border-blue-100 p-6 flex items-center gap-4"
-          >
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <Icon className="w-6 h-6 text-blue-700" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-blue-900">{value}</p>
-              <p className="text-sm text-gray-600">{label}</p>
-            </div>
-          </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {stats.map(({ label, value, icon }, i) => (
+          <StatCard key={label} icon={icon} label={label} value={value} index={i} glass />
         ))}
       </div>
 
-      {/* Search Groups & Progress */}
-      <div className="bg-white rounded-2xl shadow-lg border border-blue-100 overflow-hidden">
-        <div className="p-4 border-b border-blue-100 flex flex-col sm:flex-row sm:items-center gap-4">
-          <h2 className="font-semibold text-blue-900">All Groups & Progress</h2>
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
+      <Card className="overflow-hidden">
+        <CardHeader className="flex flex-col gap-4 border-mentor-border py-4 sm:flex-row sm:items-center">
+          <h2 className="shrink-0 font-semibold text-mentor-text">All groups & progress</h2>
+          <div className="relative flex-1 max-w-xl">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-mentor-muted" />
+            <Input
               placeholder="Search by group name, project, mentor, or member..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-blue-200 text-blue-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="pl-10"
             />
           </div>
-        </div>
-        <div className="max-h-[400px] overflow-y-auto">
+        </CardHeader>
+        <div className="max-h-[400px] overflow-y-auto border-t border-mentor-border">
           {groupsLoading ? (
             <div className="flex justify-center py-12">
-              <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full" />
+              <Loader />
             </div>
           ) : groups.length === 0 ? (
-            <p className="p-8 text-center text-gray-500">No groups found</p>
+            <EmptyState title="No groups found" description="Try a different search term." className="border-0" />
           ) : (
-            <div className="divide-y divide-blue-50">
+            <div className="divide-y divide-mentor-border">
               {groups.map((g) => (
-                <div key={g.groupId} className="hover:bg-blue-50/50">
-                  <button
-                    type="button"
+                <div key={g.groupId} className="hover:bg-mentor-surface/50">
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setExpandedGroupId(expandedGroupId === g.groupId ? null : g.groupId)}
-                    className="w-full px-6 py-4 flex items-center justify-between text-left"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ')
+                        setExpandedGroupId(expandedGroupId === g.groupId ? null : g.groupId);
+                    }}
+                    className="flex w-full cursor-pointer items-center justify-between gap-4 px-6 py-4 text-left"
                   >
-                    <div className="flex items-center gap-4">
-                      <span className="font-medium text-blue-900">{g.groupName}</span>
+                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:gap-4">
+                      <span className="font-medium text-mentor-text">{g.groupName}</span>
                       <Link
                         to={`/admin/groups/${g.groupId}`}
                         onClick={(e) => e.stopPropagation()}
-                        className="text-sm text-blue-600 hover:underline font-medium"
+                        className="text-sm font-medium text-mentor-primary hover:underline"
                       >
                         {g.projectTitle || '—'}
                       </Link>
-                      <span className="text-sm font-medium text-blue-600">Progress: {g.progress}%</span>
+                      <span className="text-sm font-medium text-mentor-primary">Progress: {g.progress}%</span>
                     </div>
                     {expandedGroupId === g.groupId ? (
-                      <ChevronUp className="w-5 h-5 text-blue-600 shrink-0" />
+                      <ChevronUp className="h-5 w-5 shrink-0 text-mentor-primary" />
                     ) : (
-                      <ChevronDown className="w-5 h-5 text-blue-600 shrink-0" />
+                      <ChevronDown className="h-5 w-5 shrink-0 text-mentor-primary" />
                     )}
-                  </button>
+                  </div>
                   {expandedGroupId === g.groupId && (
-                    <div className="px-6 pb-4 pt-0 space-y-3 bg-blue-50/30">
-                      <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                    <div className="space-y-3 border-t border-mentor-border bg-mentor-surface/40 px-6 pb-4 pt-2">
+                      <div className="grid gap-4 text-sm sm:grid-cols-2">
                         <div>
-                          <p className="font-medium text-blue-900 mb-1">Members ({g.memberCount})</p>
+                          <p className="mb-1 font-medium text-mentor-text">Members ({g.memberCount})</p>
                           <ul className="space-y-1">
                             {(g.members || []).map((m) => (
-                              <li key={m.userId} className="text-gray-700">
+                              <li key={m.userId} className="text-mentor-muted">
                                 {m.fullName || m.email} {m.isLeader && '(Leader)'}
                               </li>
                             ))}
                           </ul>
                         </div>
                         <div>
-                          <p className="font-medium text-blue-900 mb-1">Mentor</p>
-                          <p className="text-gray-700">{g.mentorName || g.mentorEmail || '—'}</p>
+                          <p className="mb-1 font-medium text-mentor-text">Mentor</p>
+                          <p className="text-mentor-muted">{g.mentorName || g.mentorEmail || '—'}</p>
                           {g.lastMeetingDate && (
                             <>
-                              <p className="font-medium text-blue-900 mt-3 mb-1">Last Meeting</p>
-                              <p className="text-gray-700">
+                              <p className="mb-1 mt-3 font-medium text-mentor-text">Last meeting</p>
+                              <p className="text-mentor-muted">
                                 {new Date(g.lastMeetingDate + 'T00:00:00').toLocaleDateString()}
                                 {g.lastMeetingVerified ? ' ✓ Verified' : ' (Pending)'}
                               </p>
                               {g.lastMeetingDetails && (
-                                <p className="text-gray-600 text-xs mt-1 line-clamp-2">{g.lastMeetingDetails}</p>
+                                <p className="mt-1 line-clamp-2 text-xs text-mentor-muted">{g.lastMeetingDetails}</p>
                               )}
                             </>
                           )}
@@ -208,9 +201,9 @@ export function AdminDashboard() {
                       </div>
                       <Link
                         to={`/groups/${g.groupId}`}
-                        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                        className="inline-flex items-center gap-1 text-sm font-medium text-mentor-primary hover:underline"
                       >
-                        View full details <ChevronRight className="w-4 h-4" />
+                        View full details <ChevronRight className="h-4 w-4" />
                       </Link>
                     </div>
                   )}
@@ -219,125 +212,54 @@ export function AdminDashboard() {
             </div>
           )}
         </div>
+      </Card>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {[
+          { to: '/admin/users', title: 'Manage users', desc: 'View, add, remove users', icon: Users },
+          { to: '/admin/analytics', title: 'Analytics', desc: 'Platform analytics', icon: BarChart3 },
+          { to: '/admin/deadlines', title: 'Deadlines', desc: 'Manage deadlines', icon: Calendar },
+          { to: '/admin/upload', title: 'Bulk upload', desc: 'Upload students/faculty Excel', icon: Upload },
+          { to: '/admin/auto-group', title: 'Auto-group', desc: 'Auto-group from Excel', icon: Sparkles },
+        ].map(({ to, title, desc, icon }) => {
+          const QuickIcon = icon;
+          return (
+          <Link key={to} to={to}>
+            <Card className="h-full transition hover:border-mentor-primary/40 hover:shadow-md">
+              <CardContent className="flex items-center justify-between gap-4 py-5">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-xl bg-mentor-primary/10 p-3">
+                    <QuickIcon className="h-6 w-6 text-mentor-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-mentor-text">{title}</h3>
+                    <p className="text-sm text-mentor-muted">{desc}</p>
+                  </div>
+                </div>
+                <ChevronRight className="h-5 w-5 shrink-0 text-mentor-primary" />
+              </CardContent>
+            </Card>
+          </Link>
+          );
+        })}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <Link
-          to="/admin/users"
-          className="block bg-white rounded-2xl shadow-lg border border-blue-100 p-6 hover:border-blue-300 transition"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <Users className="w-6 h-6 text-blue-700" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-blue-900">Manage Users</h3>
-                <p className="text-sm text-gray-600">View, add, remove users</p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-blue-600" />
+      <Alert variant="error" title="Yearly database reset">
+        <p>
+          Use this at the end of the academic year to clear students, faculty, projects, groups, deadlines,
+          recommender outputs, and uploaded files. Admin accounts are preserved.
+        </p>
+        {resetMessage && (
+          <div className="mt-3 rounded-lg border border-mentor-border bg-mentor-card px-4 py-3 text-sm text-mentor-text">
+            {resetMessage}
           </div>
-        </Link>
-        <Link
-          to="/admin/analytics"
-          className="block bg-white rounded-2xl shadow-lg border border-blue-100 p-6 hover:border-blue-300 transition"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <BarChart3 className="w-6 h-6 text-blue-700" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-blue-900">Analytics</h3>
-                <p className="text-sm text-gray-600">Platform analytics</p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-blue-600" />
-          </div>
-        </Link>
-        <Link
-          to="/admin/deadlines"
-          className="block bg-white rounded-2xl shadow-lg border border-blue-100 p-6 hover:border-blue-300 transition"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <Calendar className="w-6 h-6 text-blue-700" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-blue-900">Deadlines</h3>
-                <p className="text-sm text-gray-600">Manage deadlines</p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-blue-600" />
-          </div>
-        </Link>
-        <Link
-          to="/admin/upload"
-          className="block bg-white rounded-2xl shadow-lg border border-blue-100 p-6 hover:border-blue-300 transition"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <Users className="w-6 h-6 text-blue-700" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-blue-900">Bulk Upload</h3>
-                <p className="text-sm text-gray-600">Upload students/faculty Excel</p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-blue-600" />
-          </div>
-        </Link>
-        <Link
-          to="/admin/auto-group"
-          className="block bg-white rounded-2xl shadow-lg border border-blue-100 p-6 hover:border-blue-300 transition"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <Users className="w-6 h-6 text-blue-700" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-blue-900">Auto Group</h3>
-                <p className="text-sm text-gray-600">Auto-group from Excel</p>
-              </div>
-            </div>
-            <ChevronRight className="w-5 h-5 text-blue-600" />
-          </div>
-        </Link>
-      </div>
-
-      <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-red-100 rounded-xl">
-            <TriangleAlert className="w-6 h-6 text-red-700" />
-          </div>
-          <div className="flex-1">
-            <h2 className="text-lg font-semibold text-red-900">Yearly Database Reset</h2>
-            <p className="mt-1 text-sm text-red-700">
-              Use this at the end of the academic year to clear students, faculty, projects, groups,
-              deadlines, recommender outputs, and uploaded files. Admin accounts are preserved.
-            </p>
-            {resetMessage && (
-              <div className="mt-3 rounded-lg bg-white/70 px-4 py-3 text-sm text-red-800 border border-red-200">
-                {resetMessage}
-              </div>
-            )}
-            <div className="mt-4">
-              <button
-                type="button"
-                onClick={handleYearlyReset}
-                disabled={resetting}
-                className="inline-flex items-center rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {resetting ? 'Resetting...' : 'Reset Yearly Data'}
-              </button>
-            </div>
-          </div>
+        )}
+        <div className="mt-4">
+          <Button variant="danger" type="button" disabled={resetting} onClick={handleYearlyReset}>
+            {resetting ? 'Resetting…' : 'Reset yearly data'}
+          </Button>
         </div>
-      </div>
+      </Alert>
     </div>
   );
 }

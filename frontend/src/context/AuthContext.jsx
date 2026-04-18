@@ -9,13 +9,14 @@ const AuthContext = createContext(null);
 /** Provides auth state and methods to the app. */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() =>
+    typeof window !== 'undefined' ? !!localStorage.getItem('mentorlink_token') : true
+  );
 
   // Restore session from token on mount
   useEffect(() => {
     const token = localStorage.getItem('mentorlink_token');
     if (!token) {
-      setLoading(false);
       return;
     }
     getMe()

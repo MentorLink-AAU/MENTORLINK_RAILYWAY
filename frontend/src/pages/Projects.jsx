@@ -1,9 +1,13 @@
 /** Student projects: assigned project and available projects list. */
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { getStudentDashboard } from '../lib/api';
+import { PageHeader } from '../components/ui/PageHeader';
+import { Card, CardContent } from '../components/ui/Card';
 
 export function Projects() {
+  const [searchParams] = useSearchParams();
+  const q = (searchParams.get('q') || '').trim().toLowerCase();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -13,6 +17,25 @@ export function Projects() {
       .catch(() => setData(null))
       .finally(() => setLoading(false));
   }, []);
+
+  const project = data?.assignedProject;
+  const available = useMemo(() => {
+    const list = data?.availableProjects;
+    return Array.isArray(list) ? list : [];
+  }, [data]);
+
+  const assignedMatches = useMemo(() => {
+    if (!q || !project) return true;
+    const hay = `${project.title || ''} ${project.domain || ''}`.toLowerCase();
+    return hay.includes(q);
+  }, [q, project]);
+
+  const filteredAvailable = useMemo(() => {
+    if (!q) return available;
+    return available.filter((p) =>
+      `${p.title || ''} ${p.domain || ''}`.toLowerCase().includes(q)
+    );
+  }, [available, q]);
 
   if (loading) {
     return (
@@ -34,44 +57,52 @@ export function Projects() {
     );
   }
 
-  const project = data?.assignedProject;
-  const available = data?.availableProjects || [];
-
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-blue-900 animate-fade-in-up">Projects</h1>
+      <PageHeader
+        title="Projects"
+        description={q ? `Filtered by “${searchParams.get('q')}”.` : 'Your assigned work and discoverable projects.'}
+      />
 
-      {project && (
-        <div className="bg-white rounded-2xl shadow-lg border border-blue-100 p-6 animate-fade-in-up hover-lift" style={{ animationDelay: '0.05s', opacity: 0 }}>
-          <h2 className="font-semibold text-blue-900 mb-4">My Assigned Project</h2>
-          <Link
-            to={`/projects/${project.projectId}`}
-            className="block p-4 rounded-xl border border-blue-100 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-300 hover:scale-[1.01]"
-          >
-            <h3 className="font-medium text-blue-900">{project.title}</h3>
-            <p className="text-sm text-gray-600 mt-1">{project.domain}</p>
-            <p className="text-blue-600 text-sm mt-2">Progress: {project.progress}%</p>
-          </Link>
-        </div>
+      {project && assignedMatches && (
+        <Card variant="glass" className="animate-fade-in-up hover-lift" style={{ animationDelay: '0.05s', opacity: 0 }}>
+          <CardContent className="p-6">
+            <h2 className="mb-4 font-semibold text-mentor-text">My assigned project</h2>
+            <Link
+              to={`/projects/${project.projectId}`}
+              className="block rounded-xl border border-mentor-border/60 bg-mentor-card/40 p-4 transition hover:border-mentor-primary/40 hover:bg-mentor-primary/[0.04]"
+            >
+              <h3 className="font-medium text-mentor-text">{project.title}</h3>
+              <p className="mt-1 text-sm text-mentor-muted">{project.domain}</p>
+              <p className="mt-2 text-sm text-mentor-primary">Progress: {project.progress}%</p>
+            </Link>
+          </CardContent>
+        </Card>
       )}
 
-      {available.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-lg border border-blue-100 p-6 animate-fade-in-up hover-lift" style={{ animationDelay: '0.1s', opacity: 0 }}>
-          <h2 className="font-semibold text-blue-900 mb-4">Available Projects</h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {available.map((p, i) => (
+      {filteredAvailable.length > 0 && (
+        <Card variant="glass" className="animate-fade-in-up hover-lift" style={{ animationDelay: '0.1s', opacity: 0 }}>
+          <CardContent className="p-6">
+            <h2 className="mb-4 font-semibold text-mentor-text">Available projects</h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+            {filteredAvailable.map((p, i) => (
               <Link
                 key={p.projectId}
                 to={`/projects/${p.projectId}`}
-                className="block p-4 rounded-xl border border-blue-100 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-300 hover-lift animate-fade-in-up"
+                className="hover-lift block rounded-xl border border-mentor-border/60 bg-mentor-card/40 p-4 transition animate-fade-in-up hover:border-mentor-primary/40 hover:bg-mentor-primary/[0.04]"
                 style={{ animationDelay: `${0.15 + i * 0.05}s`, opacity: 0 }}
               >
-                <h3 className="font-medium text-blue-900">{p.title}</h3>
-                <p className="text-sm text-gray-600">{p.domain}</p>
+                <h3 className="font-medium text-mentor-text">{p.title}</h3>
+                <p className="text-sm text-mentor-muted">{p.domain}</p>
               </Link>
             ))}
           </div>
-        </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {q && !assignedMatches && filteredAvailable.length === 0 && (
+        <p className="text-center text-sm text-mentor-muted">No projects match your search.</p>
       )}
 
       {!project && available.length === 0 && (

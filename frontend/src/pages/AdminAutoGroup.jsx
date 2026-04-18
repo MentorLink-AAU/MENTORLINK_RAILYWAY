@@ -38,7 +38,9 @@ export function AdminAutoGroup() {
           setDeadlineDate(null);
         }
       })
-      .catch(() => {})
+      .catch(() => {
+        void 0;
+      })
       .finally(() => setLoadingStatus(false));
   }, []);
 
@@ -69,7 +71,9 @@ export function AdminAutoGroup() {
       a.download = 'leftover-students.xlsx';
       a.click();
       URL.revokeObjectURL(url);
-    } catch {}
+    } catch {
+      void 0;
+    }
   };
 
   const handleDownloadFaculty = async () => {
@@ -82,7 +86,9 @@ export function AdminAutoGroup() {
       a.download = 'faculty-list.xlsx';
       a.click();
       URL.revokeObjectURL(url);
-    } catch {}
+    } catch {
+      void 0;
+    }
   };
 
   const handleExcelSubmit = async (e) => {

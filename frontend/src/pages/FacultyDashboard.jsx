@@ -1,10 +1,24 @@
 /** Faculty dashboard: supervised projects, pending mentorship requests. */
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getFacultyDashboard, getPendingMentorshipRequests, approveMentorshipRequest, rejectMentorshipRequest } from '../lib/api';
-import { FolderKanban, Users, Bell, ChevronRight, UserPlus, Check, X } from 'lucide-react';
+import {
+  getFacultyDashboard,
+  getPendingMentorshipRequests,
+  approveMentorshipRequest,
+  rejectMentorshipRequest,
+} from '../lib/api';
+import { FolderKanban, Users, Bell, ChevronRight, UserPlus, Check, X, BarChart3 } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { PageHeader } from '../components/ui/PageHeader';
+import { StatCard } from '../components/ui/StatCard';
+import { Card, CardContent, CardHeader } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Alert } from '../components/ui/Alert';
+import { DashboardSkeleton } from '../components/ui/Skeleton';
+import { EmptyState } from '../components/common/EmptyState';
 
 export function FacultyDashboard() {
+  const { toast } = useToast();
   const [data, setData] = useState(null);
   const [pendingRequests, setPendingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,31 +41,25 @@ export function FacultyDashboard() {
     try {
       await approveMentorshipRequest(requestId);
       setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
-    } catch {}
+      toast.success('Mentorship request approved');
+    } catch (e) {
+      toast.error(e?.response?.data?.error?.message || 'Could not approve request');
+    }
   };
 
   const handleReject = async (requestId) => {
     try {
       await rejectMentorshipRequest(requestId);
       setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
-    } catch {}
+      toast.info('Request declined');
+    } catch (e) {
+      toast.error(e?.response?.data?.error?.message || 'Could not reject request');
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full" />
-      </div>
-    );
-  }
+  if (loading) return <DashboardSkeleton />;
 
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-red-700">
-        {error}
-      </div>
-    );
-  }
+  if (error) return <Alert variant="error">{error}</Alert>;
 
   const profile = data?.profile;
   const projects = data?.supervisedProjects || [];
@@ -60,147 +68,156 @@ export function FacultyDashboard() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-blue-900">
-          Welcome, Prof. {profile?.fullName || 'Faculty'}
-        </h1>
-        {unread > 0 && (
-          <Link
-            to="/notifications"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200"
-          >
-            <Bell className="w-4 h-4" />
-            {unread} unread
-          </Link>
-        )}
+      <PageHeader
+        title={`Welcome, Prof. ${profile?.fullName || 'Faculty'}`}
+        description="Oversee supervised projects, groups, and mentorship requests."
+        actions={
+          unread > 0 ? (
+            <Button variant="outline" size="sm" as={Link} to="/notifications">
+              <Bell className="h-4 w-4" />
+              {unread} unread
+            </Button>
+          ) : null
+        }
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard icon={FolderKanban} label="Supervised projects" value={projects.length} index={0} glass />
+        <StatCard icon={Users} label="Assigned groups" value={groups.length} index={1} glass />
+        <StatCard icon={UserPlus} label="Pending requests" value={pendingRequests.length} index={2} glass />
+        <StatCard
+          icon={BarChart3}
+          label="Mentorship load"
+          value={profile?.currentLoad ?? 0}
+          suffix={` / ${profile?.maxGroups ?? 3}`}
+          index={3}
+          glass
+        />
       </div>
 
       {pendingRequests.length > 0 && (
-        <div className="bg-amber-50 rounded-2xl shadow-lg border border-amber-200 overflow-hidden">
-          <div className="p-4 bg-amber-100 border-b border-amber-200 flex items-center gap-2">
-            <UserPlus className="w-5 h-5 text-amber-700" />
-            <span className="font-semibold text-amber-900">Mentorship requests ({pendingRequests.length})</span>
-          </div>
-          <div className="p-6 space-y-4">
+        <Card className="overflow-hidden border-mentor-warning/30">
+          <CardHeader className="flex flex-row items-center gap-2 border-mentor-warning/20 bg-mentor-warning/10 py-3">
+            <UserPlus className="h-5 w-5 text-mentor-warning" />
+            <span className="font-semibold text-mentor-text">
+              Mentorship requests ({pendingRequests.length})
+            </span>
+          </CardHeader>
+          <CardContent className="space-y-4">
             {pendingRequests.map((r) => (
               <div
                 key={r.id}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-white border border-amber-200"
+                className="flex flex-col gap-4 rounded-xl border border-mentor-border bg-mentor-card p-4 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
-                  <h3 className="font-medium text-blue-900">{r.groupName}</h3>
-                  <p className="text-sm text-gray-600">{r.projectTopic}</p>
+                  <h3 className="font-medium text-mentor-text">{r.groupName}</h3>
+                  <p className="text-sm text-mentor-muted">{r.projectTopic}</p>
                   {r.projectDescription && (
-                    <p className="text-xs text-gray-500 mt-1 line-clamp-1">{r.projectDescription}</p>
+                    <p className="mt-1 line-clamp-1 text-xs text-mentor-muted">{r.projectDescription}</p>
                   )}
                 </div>
-                <div className="flex gap-2">
-                  <Link
-                    to={`/groups/${r.groupId}`}
-                    className="px-3 py-2 text-sm text-blue-600 hover:underline"
-                  >
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="ghost" size="sm" as={Link} to={`/groups/${r.groupId}`}>
                     View group
-                  </Link>
-                  <button
-                    onClick={() => handleApprove(r.id)}
-                    className="inline-flex items-center gap-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm"
-                  >
-                    <Check className="w-4 h-4" />
+                  </Button>
+                  <Button variant="primary" size="sm" type="button" onClick={() => handleApprove(r.id)}>
+                    <Check className="h-4 w-4" />
                     Approve
-                  </button>
-                  <button
-                    onClick={() => handleReject(r.id)}
-                    className="inline-flex items-center gap-1 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm"
-                  >
-                    <X className="w-4 h-4" />
+                  </Button>
+                  <Button variant="outline" size="sm" type="button" onClick={() => handleReject(r.id)}>
+                    <X className="h-4 w-4" />
                     Reject
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl shadow-lg border border-blue-100 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-blue-600 font-medium">
-              Load: {profile?.currentLoad ?? 0} / {profile?.maxGroups ?? 3} groups
-            </span>
-          </div>
-          <p className="text-sm text-gray-600">
-            Expertise: {profile?.expertise || '—'}
+      <Card>
+        <CardContent className="space-y-2">
+          <p className="text-sm font-medium text-mentor-primary">
+            Load: {profile?.currentLoad ?? 0} / {profile?.maxGroups ?? 3} groups
           </p>
-        </div>
-      </div>
+          <p className="text-sm text-mentor-muted">Expertise: {profile?.expertise || '—'}</p>
+        </CardContent>
+      </Card>
 
-      <div className="bg-white rounded-2xl shadow-lg border border-blue-100 overflow-hidden">
-        <div className="p-4 bg-blue-50 border-b border-blue-100 flex items-center justify-between">
-          <span className="font-semibold text-blue-900 flex items-center gap-2">
-            <FolderKanban className="w-5 h-5" />
-            Supervised Projects
+      <Card className="overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between border-mentor-border bg-mentor-surface/80 py-3">
+          <span className="flex items-center gap-2 font-semibold text-mentor-text">
+            <FolderKanban className="h-5 w-5 text-mentor-primary" />
+            Supervised projects
           </span>
-          <Link to="/faculty/projects" className="text-blue-600 text-sm font-medium hover:underline">
+          <Link
+            to="/faculty/projects"
+            className="text-sm font-medium text-mentor-primary hover:underline"
+          >
             View all
           </Link>
-        </div>
-        <div className="p-6">
+        </CardHeader>
+        <CardContent>
           {projects.length === 0 ? (
-            <p className="text-gray-500">No projects assigned yet</p>
+            <EmptyState
+              title="No projects assigned"
+              description="Projects appear here when you are assigned as a mentor."
+            />
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {projects.map((p) => (
-                <Link
+                <div
                   key={p.projectId}
-                  to={`/projects/${p.projectId}`}
-                  className="block p-4 rounded-xl border border-blue-100 hover:border-blue-300 hover:bg-blue-50/50 transition"
+                  className="rounded-xl border border-mentor-border p-4 transition hover:border-mentor-primary/40 hover:bg-mentor-surface/50"
                 >
-                  <h3 className="font-medium text-blue-900">{p.title}</h3>
-                  <p className="text-sm text-gray-600 mt-1">Progress: {p.progress}%</p>
+                  <Link to={`/projects/${p.projectId}`} className="block">
+                    <h3 className="font-medium text-mentor-primary hover:underline">{p.title}</h3>
+                    <p className="mt-1 text-sm text-mentor-muted">Progress: {p.progress}%</p>
+                  </Link>
                   {p.groupId && (
                     <Link
                       to={`/groups/${p.groupId}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-blue-600 text-sm mt-2 inline-block"
+                      className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-mentor-primary hover:underline"
                     >
-                      View Group <ChevronRight className="w-3 h-3 inline" />
+                      View group <ChevronRight className="h-4 w-4" />
                     </Link>
                   )}
-                </Link>
+                </div>
               ))}
             </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <div className="bg-white rounded-2xl shadow-lg border border-blue-100 overflow-hidden">
-        <div className="p-4 bg-blue-50 border-b border-blue-100 flex items-center gap-2">
-          <Users className="w-5 h-5 text-blue-600" />
-          <span className="font-semibold text-blue-900">Assigned Groups</span>
-        </div>
-        <div className="p-6">
+      <Card className="overflow-hidden">
+        <CardHeader className="flex flex-row items-center gap-2 border-mentor-border bg-mentor-surface/80 py-3">
+          <Users className="h-5 w-5 text-mentor-primary" />
+          <span className="font-semibold text-mentor-text">Assigned groups</span>
+        </CardHeader>
+        <CardContent>
           {groups.length === 0 ? (
-            <p className="text-gray-500">No groups assigned</p>
+            <EmptyState title="No groups assigned" description="Student groups you mentor will list here." />
           ) : (
             <div className="space-y-3">
               {groups.map((g) => (
                 <Link
                   key={g.groupId}
                   to={`/groups/${g.groupId}`}
-                  className="flex items-center justify-between p-4 rounded-xl border border-blue-100 hover:border-blue-300 hover:bg-blue-50/50 transition"
+                  className="flex items-center justify-between rounded-xl border border-mentor-border p-4 transition hover:border-mentor-primary/40 hover:bg-mentor-surface/50"
                 >
                   <div>
-                    <h3 className="font-medium text-blue-900">{g.name}</h3>
-                    <p className="text-sm text-gray-600">{g.projectTitle} • {g.memberCount} members</p>
+                    <h3 className="font-medium text-mentor-text">{g.name}</h3>
+                    <p className="text-sm text-mentor-muted">
+                      {g.projectTitle} • {g.memberCount} members
+                    </p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-blue-600" />
+                  <ChevronRight className="h-5 w-5 shrink-0 text-mentor-primary" />
                 </Link>
               ))}
             </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

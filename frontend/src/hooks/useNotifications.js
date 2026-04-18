@@ -36,7 +36,9 @@ export function useNotifications() {
         prev.map((n) => (n.id === id ? { ...n, read: true } : n))
       );
       setUnreadCount((c) => Math.max(0, c - 1));
-    } catch {}
+    } catch {
+      void 0;
+    }
   };
 
   const addNotification = useCallback((n) => {

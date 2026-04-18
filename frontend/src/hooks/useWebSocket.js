@@ -8,7 +8,10 @@ const WS_BASE = import.meta.env.VITE_WS_URL || '';
 export function useWebSocket(userId, onNotification) {
   const clientRef = useRef(null);
   const onNotificationRef = useRef(onNotification);
-  onNotificationRef.current = onNotification;
+
+  useEffect(() => {
+    onNotificationRef.current = onNotification;
+  }, [onNotification]);
 
   const disconnect = useCallback(() => {
     if (clientRef.current?.connected) {
@@ -30,7 +33,9 @@ export function useWebSocket(userId, onNotification) {
           try {
             const body = JSON.parse(msg.body);
             onNotificationRef.current?.(body);
-          } catch {}
+          } catch {
+            void 0;
+          }
         });
       },
     });

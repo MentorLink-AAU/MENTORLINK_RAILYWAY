@@ -9,7 +9,17 @@ import {
   Bell,
   ChevronRight,
   Plus,
+  LayoutList,
+  TrendingUp,
 } from 'lucide-react';
+import { PageHeader } from '../components/ui/PageHeader';
+import { StatCard } from '../components/ui/StatCard';
+import { Card, CardContent, CardHeader } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
+import { Badge } from '../components/ui/Badge';
+import { Alert } from '../components/ui/Alert';
+import { DashboardSkeleton } from '../components/ui/Skeleton';
+import { EmptyState } from '../components/common/EmptyState';
 
 export function StudentDashboard() {
   const [data, setData] = useState(null);
@@ -24,19 +34,11 @@ export function StudentDashboard() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full" />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-red-700">
-        {error}
-      </div>
-    );
+    return <Alert variant="error">{error}</Alert>;
   }
 
   const profile = data?.profile;
@@ -48,159 +50,166 @@ export function StudentDashboard() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-blue-900">
-          Welcome, {profile?.fullName || 'Student'}
-        </h1>
-        {unread > 0 && (
-          <Link
-            to="/notifications"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-800 rounded-lg hover:bg-blue-200"
-          >
-            <Bell className="w-4 h-4" />
-            {unread} unread
-          </Link>
-        )}
+      <PageHeader
+        title={`Welcome, ${profile?.fullName || 'Student'}`}
+        description="Your project, group, and submission activity in one place."
+        actions={
+          unread > 0 ? (
+            <Button variant="outline" size="sm" as={Link} to="/notifications">
+              <Bell className="h-4 w-4" />
+              {unread} unread
+            </Button>
+          ) : null
+        }
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard icon={FileText} label="Submissions" value={submissions.length} index={0} glass />
+        <StatCard icon={LayoutList} label="Open listings" value={availableProjects.length} index={1} glass />
+        <StatCard icon={Users} label="Group members" value={group?.memberCount ?? 0} index={2} glass />
+        <StatCard icon={TrendingUp} label="Project progress" value={project?.progress ?? 0} suffix="%" index={3} glass />
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Assigned Project */}
-        <div className="bg-white rounded-2xl shadow-lg border border-blue-100 overflow-hidden">
-          <div className="p-4 bg-blue-50 border-b border-blue-100 flex items-center gap-2">
-            <FolderKanban className="w-5 h-5 text-blue-600" />
-            <span className="font-semibold text-blue-900">My Project</span>
-          </div>
-          <div className="p-6">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="overflow-hidden">
+          <CardHeader className="flex flex-row items-center gap-2 border-mentor-border bg-mentor-surface/80 py-3">
+            <FolderKanban className="h-5 w-5 text-mentor-primary" />
+            <span className="font-semibold text-mentor-text">My project</span>
+          </CardHeader>
+          <CardContent>
             {project ? (
               <>
-                <h3 className="font-semibold text-blue-900 mb-2">{project.title}</h3>
-                <p className="text-sm text-gray-600 mb-4 line-clamp-2">{project.description}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-blue-600">Progress: {project.progress}%</span>
+                <h3 className="mb-2 font-semibold text-mentor-text">{project.title}</h3>
+                <p className="mb-4 line-clamp-2 text-sm text-mentor-muted">{project.description}</p>
+                <div className="flex items-center justify-between gap-2">
+                  <Badge variant="primary">Progress: {project.progress}%</Badge>
                   <Link
                     to={`/projects/${project.projectId}`}
-                    className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-1"
+                    className="inline-flex items-center gap-1 text-sm font-medium text-mentor-primary hover:underline"
                   >
-                    View <ChevronRight className="w-4 h-4" />
+                    View <ChevronRight className="h-4 w-4" />
                   </Link>
                 </div>
               </>
             ) : (
-              <p className="text-gray-500 text-sm">No project assigned yet</p>
+              <EmptyState
+                title="No project yet"
+                description="Your faculty mentor will assign a project when your group is ready."
+                className="border-0 bg-transparent py-6"
+              />
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        {/* Group */}
-        <div className="bg-white rounded-2xl shadow-lg border border-blue-100 overflow-hidden">
-          <div className="p-4 bg-blue-50 border-b border-blue-100 flex items-center gap-2">
-            <Users className="w-5 h-5 text-blue-600" />
-            <span className="font-semibold text-blue-900">My Group</span>
-          </div>
-          <div className="p-6">
+        <Card className="overflow-hidden">
+          <CardHeader className="flex flex-row items-center gap-2 border-mentor-border bg-mentor-surface/80 py-3">
+            <Users className="h-5 w-5 text-mentor-primary" />
+            <span className="font-semibold text-mentor-text">My group</span>
+          </CardHeader>
+          <CardContent>
             {group ? (
               <>
-                <h3 className="font-semibold text-blue-900 mb-2">{group.name}</h3>
-                <p className="text-sm text-gray-600 mb-2">{group.projectTitle}</p>
-                <p className="text-sm text-blue-600 mb-4">{group.memberCount} members</p>
+                <h3 className="mb-2 font-semibold text-mentor-text">{group.name}</h3>
+                <p className="mb-2 text-sm text-mentor-muted">{group.projectTitle}</p>
+                <p className="mb-4 text-sm text-mentor-primary">{group.memberCount} members</p>
                 <Link
                   to={`/groups/${group.groupId}`}
-                  className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center gap-1"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-mentor-primary hover:underline"
                 >
-                  View Group <ChevronRight className="w-4 h-4" />
+                  View group <ChevronRight className="h-4 w-4" />
                 </Link>
               </>
             ) : (
               <div className="space-y-3">
-                <p className="text-gray-500 text-sm">Not in a group yet. Choose an option:</p>
+                <p className="text-sm text-mentor-muted">Not in a group yet. Choose an option:</p>
                 <div className="flex flex-col gap-2">
-                  <Link
-                    to="/groups/create"
-                    className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
-                  >
-                    <Plus className="w-4 h-4" /> Create your own group
-                  </Link>
-                  <Link
-                    to="/groups/join"
-                    className="inline-flex items-center gap-2 px-3 py-2 border border-blue-600 text-blue-700 rounded-lg hover:bg-blue-50 text-sm font-medium"
-                  >
-                    <Users className="w-4 h-4" /> Join with invite token
-                  </Link>
+                  <Button variant="primary" size="sm" as={Link} to="/groups/create">
+                    <Plus className="h-4 w-4" /> Create your own group
+                  </Button>
+                  <Button variant="outline" size="sm" as={Link} to="/groups/join">
+                    <Users className="h-4 w-4" /> Join with invite token
+                  </Button>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Create: start a new project and get a token to invite peers. Join: use a token from your teammate.
+                <p className="text-xs text-mentor-muted">
+                  Create: start a new project and get a token to invite peers. Join: use a token from your
+                  teammate.
                 </p>
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        {/* Submissions */}
-        <div className="bg-white rounded-2xl shadow-lg border border-blue-100 overflow-hidden">
-          <div className="p-4 bg-blue-50 border-b border-blue-100 flex items-center gap-2">
-            <FileText className="w-5 h-5 text-blue-600" />
-            <span className="font-semibold text-blue-900">My Submissions</span>
-          </div>
-          <div className="p-6">
+        <Card className="overflow-hidden">
+          <CardHeader className="flex flex-row items-center gap-2 border-mentor-border bg-mentor-surface/80 py-3">
+            <FileText className="h-5 w-5 text-mentor-primary" />
+            <span className="font-semibold text-mentor-text">My submissions</span>
+          </CardHeader>
+          <CardContent>
             {submissions.length > 0 ? (
-              <ul className="space-y-2">
-                {submissions.slice(0, 3).map((s) => (
-                  <li key={s.id} className="text-sm text-gray-700">
-                    {s.originalFilename} ({s.category})
-                  </li>
-                ))}
-                {submissions.length > 3 && (
-                  <li className="text-blue-600 text-sm">+{submissions.length - 3} more</li>
+              <>
+                <ul className="space-y-2">
+                  {submissions.slice(0, 3).map((s) => (
+                    <li key={s.id} className="text-sm text-mentor-text">
+                      {s.originalFilename} ({s.category})
+                    </li>
+                  ))}
+                  {submissions.length > 3 && (
+                    <li className="text-sm text-mentor-primary">+{submissions.length - 3} more</li>
+                  )}
+                </ul>
+                {project && (
+                  <Link
+                    to={`/projects/${project.projectId}/submissions`}
+                    className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-mentor-primary hover:underline"
+                  >
+                    Manage submissions <ChevronRight className="h-4 w-4" />
+                  </Link>
                 )}
-              </ul>
+              </>
             ) : (
-              <p className="text-gray-500 text-sm">No submissions yet</p>
+              <EmptyState
+                title="No submissions yet"
+                description="Upload reports and artifacts from your project page."
+                className="border-0 bg-transparent py-4"
+              />
             )}
-            {project && (
-              <Link
-                to={`/projects/${project.projectId}/submissions`}
-                className="mt-4 inline-flex items-center gap-1 text-blue-600 font-medium text-sm"
-              >
-                Manage Submissions <ChevronRight className="w-4 h-4" />
-              </Link>
-            )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Available Projects */}
       {availableProjects.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-lg border border-blue-100 overflow-hidden">
-          <div className="p-4 bg-blue-50 border-b border-blue-100">
-            <span className="font-semibold text-blue-900">Available Projects</span>
-          </div>
-          <div className="p-6">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card className="overflow-hidden">
+          <CardHeader className="border-mentor-border bg-mentor-surface/80 py-3">
+            <span className="font-semibold text-mentor-text">Available projects</span>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {availableProjects.map((p) => (
                 <Link
                   key={p.projectId}
                   to={`/projects/${p.projectId}`}
-                  className="block p-4 rounded-xl border border-blue-100 hover:border-blue-300 hover:bg-blue-50/50 transition"
+                  className="block rounded-xl border border-mentor-border p-4 transition hover:border-mentor-primary/40 hover:bg-mentor-surface/50"
                 >
-                  <h4 className="font-medium text-blue-900">{p.title}</h4>
-                  <p className="text-sm text-gray-600 mt-1 line-clamp-1">{p.domain}</p>
+                  <h4 className="font-medium text-mentor-text">{p.title}</h4>
+                  <p className="mt-1 line-clamp-1 text-sm text-mentor-muted">{p.domain}</p>
                 </Link>
               ))}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Deadlines */}
-      <div className="bg-white rounded-2xl shadow-lg border border-blue-100 p-6">
-        <h2 className="font-semibold text-blue-900 mb-4">Deadlines</h2>
-        <Link
-          to="/deadlines"
-          className="text-blue-600 hover:text-blue-700 font-medium text-sm"
-        >
-          View all deadlines →
-        </Link>
-      </div>
+      <Card>
+        <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-semibold text-mentor-text">Deadlines</h2>
+            <p className="text-sm text-mentor-muted">University and course milestone dates.</p>
+          </div>
+          <Button variant="outline" size="sm" as={Link} to="/deadlines">
+            View all deadlines
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

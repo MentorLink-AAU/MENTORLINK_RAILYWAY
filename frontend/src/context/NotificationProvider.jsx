@@ -23,7 +23,9 @@ export function NotificationProvider({ children }) {
       const count = countRes.data?.data;
       if (Array.isArray(data)) setNotifications(data);
       if (typeof count === 'number') setUnreadCount(count);
-    } catch {}
+    } catch {
+      void 0;
+    }
   }, []);
 
   const addNotification = useCallback((n) => {
@@ -34,7 +36,15 @@ export function NotificationProvider({ children }) {
   useWebSocket(user?.id, addNotification);
 
   useEffect(() => {
-    if (user) refresh();
+    if (!user) return undefined;
+    let cancelled = false;
+    const id = requestAnimationFrame(() => {
+      if (!cancelled) void refresh();
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(id);
+    };
   }, [user, refresh]);
 
   const markAsRead = async (id) => {
@@ -44,7 +54,9 @@ export function NotificationProvider({ children }) {
         prev.map((n) => (n.id === id ? { ...n, read: true } : n))
       );
       setUnreadCount((c) => Math.max(0, c - 1));
-    } catch {}
+    } catch {
+      void 0;
+    }
   };
 
   return (
@@ -63,10 +75,12 @@ export function NotificationProvider({ children }) {
 
 export function useNotificationContext() {
   const ctx = useContext(NotificationContext);
-  return ctx || {
-    notifications: [],
-    unreadCount: 0,
-    refresh: () => {},
-    markAsRead: () => {},
-  };
+  return (
+    ctx || {
+      notifications: [],
+      unreadCount: 0,
+      refresh: async () => {},
+      markAsRead: async () => {},
+    }
+  );
 }

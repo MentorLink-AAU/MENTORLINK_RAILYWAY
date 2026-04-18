@@ -106,7 +106,7 @@ export function AdminAnalytics() {
                     outerRadius={80}
                     label={({ name, value }) => `${name}: ${value}`}
                   >
-                    {studentData.map((entry, index) => (
+                    {studentData.map((entry) => (
                       <Cell key={entry.name} fill={entry.fill} />
                     ))}
                   </Pie>
@@ -133,7 +133,7 @@ export function AdminAnalytics() {
                     outerRadius={80}
                     label={({ name, value }) => `${name}: ${value}`}
                   >
-                    {projectMentorData.map((entry, index) => (
+                    {projectMentorData.map((entry) => (
                       <Cell key={entry.name} fill={entry.fill} />
                     ))}
                   </Pie>

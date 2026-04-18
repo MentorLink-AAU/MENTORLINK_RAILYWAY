@@ -4,6 +4,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationProvider';
+import { ToastProvider } from './context/ToastContext';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Landing } from './pages/Landing';
@@ -29,6 +30,10 @@ import { AdminGroupDetail } from './pages/AdminGroupDetail';
 import { ChangePassword } from './pages/ChangePassword';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
+import { Notifications } from './pages/Notifications';
+import { StudentGroups } from './pages/StudentGroups';
+import { FacultyStudents } from './pages/FacultyStudents';
+import { FacultyRecommendations } from './pages/FacultyRecommendations';
 
 /** Redirects authenticated users to their role dashboard. */
 function HomeRedirect() {
@@ -48,8 +53,8 @@ function RootRoute() {
   const pathname = location.pathname;
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full" />
+      <div className="flex min-h-screen items-center justify-center bg-mentor-surface">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-mentor-primary border-t-transparent" />
       </div>
     );
   }
@@ -73,6 +78,7 @@ export default function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
+      <ToastProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -85,6 +91,7 @@ export default function App() {
             <Route path="dashboard/student" element={<ProtectedRoute roles={['STUDENT']}><StudentDashboard /></ProtectedRoute>} />
             <Route path="dashboard/faculty" element={<ProtectedRoute roles={['FACULTY']}><FacultyDashboard /></ProtectedRoute>} />
             <Route path="dashboard/admin" element={<ProtectedRoute roles={['ADMIN']}><AdminDashboard /></ProtectedRoute>} />
+            <Route path="notifications" element={<Notifications />} />
             <Route path="profile" element={<Profile />} />
             <Route path="projects" element={<ProtectedRoute roles={['STUDENT']}><Projects /></ProtectedRoute>} />
             <Route path="projects/:projectId" element={<ProjectDetail />} />
@@ -92,7 +99,10 @@ export default function App() {
             <Route path="groups/create" element={<ProtectedRoute roles={['STUDENT']}><CreateGroup /></ProtectedRoute>} />
             <Route path="groups/join" element={<JoinGroup />} />
             <Route path="deadlines" element={<Deadlines />} />
+            <Route path="student/groups" element={<ProtectedRoute roles={['STUDENT']}><StudentGroups /></ProtectedRoute>} />
             <Route path="faculty/projects" element={<ProtectedRoute roles={['FACULTY']}><FacultyProjects /></ProtectedRoute>} />
+            <Route path="faculty/students" element={<ProtectedRoute roles={['FACULTY']}><FacultyStudents /></ProtectedRoute>} />
+            <Route path="faculty/recommendations" element={<ProtectedRoute roles={['FACULTY']}><FacultyRecommendations /></ProtectedRoute>} />
             <Route path="admin/users" element={<ProtectedRoute roles={['ADMIN']}><AdminUsers /></ProtectedRoute>} />
             <Route path="admin/analytics" element={<ProtectedRoute roles={['ADMIN']}><AdminAnalytics /></ProtectedRoute>} />
             <Route path="admin/deadlines" element={<ProtectedRoute roles={['ADMIN']}><AdminDeadlines /></ProtectedRoute>} />
@@ -103,6 +113,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      </ToastProvider>
       </NotificationProvider>
     </AuthProvider>
   );

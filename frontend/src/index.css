@@ -3,11 +3,35 @@
 :root {
   --mentor-primary: #2563eb;
   --mentor-primary-dark: #1d4ed8;
+  --mentor-secondary: #312e81;
   --mentor-accent: #3b82f6;
-  --mentor-surface: #eff6ff;
+  --mentor-surface: #f1f5f9;
   --mentor-card: #ffffff;
-  --mentor-text: #1e3a8a;
-  --mentor-text-muted: #60a5fa;
+  --mentor-text: #0f172a;
+  --mentor-text-muted: #64748b;
+  --mentor-sidebar: #0f172a;
+  --mentor-sidebar-border: #1e293b;
+  --mentor-border: #e2e8f0;
+  --mentor-danger: #dc2626;
+  --mentor-success: #059669;
+  --mentor-warning: #d97706;
+}
+
+@theme inline {
+  --color-mentor-primary: var(--mentor-primary);
+  --color-mentor-primary-dark: var(--mentor-primary-dark);
+  --color-mentor-secondary: var(--mentor-secondary);
+  --color-mentor-accent: var(--mentor-accent);
+  --color-mentor-surface: var(--mentor-surface);
+  --color-mentor-card: var(--mentor-card);
+  --color-mentor-text: var(--mentor-text);
+  --color-mentor-muted: var(--mentor-text-muted);
+  --color-mentor-sidebar: var(--mentor-sidebar);
+  --color-mentor-sidebar-border: var(--mentor-sidebar-border);
+  --color-mentor-border: var(--mentor-border);
+  --color-mentor-danger: var(--mentor-danger);
+  --color-mentor-success: var(--mentor-success);
+  --color-mentor-warning: var(--mentor-warning);
 }
 
 body {
@@ -15,8 +39,9 @@ body {
   font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%);
+  background: var(--mentor-surface);
   min-height: 100vh;
+  color: var(--mentor-text);
 }
 
 #root {
