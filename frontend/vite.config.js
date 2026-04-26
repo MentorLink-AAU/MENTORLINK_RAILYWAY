@@ -8,6 +8,11 @@ export default defineConfig({
     global: 'globalThis',
   },
   plugins: [react(), tailwindcss()],
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.js',
+    globals: true,
+  },
   server: {
     port: 3000,
     proxy: {

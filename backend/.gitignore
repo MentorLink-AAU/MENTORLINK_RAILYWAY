@@ -32,3 +32,8 @@ build/
 ### VS Code ###
 .vscode/
 
+# Local credentials (template is tracked at repo root rules)
+.env
+.env.*
+!.env.example
+

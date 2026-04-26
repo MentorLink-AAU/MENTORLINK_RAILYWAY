@@ -50,7 +50,8 @@ class AuthFlowIntegrationTest {
                         .content(objectMapper.writeValueAsString(login)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data").isString());
+                .andExpect(jsonPath("$.data.token").isString())
+                .andExpect(jsonPath("$.data.requiresPasswordChange").value(false));
     }
 }
 

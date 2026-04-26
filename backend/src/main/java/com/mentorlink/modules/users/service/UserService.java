@@ -90,6 +90,9 @@ public class UserService {
         // 🔹 If Faculty → pull from FacultyProfile
         if ("FACULTY".equals(role) && user.getFacultyProfile() != null) {
             builder.department(user.getFacultyProfile().getDepartment());
+            builder.expertise(user.getFacultyProfile().getExpertise());
+            builder.maxGroups(user.getFacultyProfile().getMaxGroups());
+            builder.currentLoad(user.getFacultyProfile().getCurrentLoad());
         }
 
         // 🔹 If Admin → no extra details
