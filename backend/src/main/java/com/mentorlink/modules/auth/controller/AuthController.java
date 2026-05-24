@@ -1,6 +1,8 @@
 package com.mentorlink.modules.auth.controller;
 
 import com.mentorlink.common.dto.ApiResponse;
+import com.mentorlink.common.exception.ApiException;
+import org.springframework.http.HttpStatus;
 import com.mentorlink.modules.auth.dto.*;
 import com.mentorlink.modules.auth.service.AuthService;
 import com.mentorlink.modules.auth.service.PasswordResetService;
@@ -91,7 +93,7 @@ public class AuthController {
                 .toList();
 
         if (requiredRole != null && !roles.contains(requiredRole)) {
-            throw new RuntimeException("Invalid role login");
+            throw new ApiException(HttpStatus.FORBIDDEN, "ROLE_MISMATCH", "Invalid role for this login endpoint");
         }
 
         String token = jwtTokenProvider.generate(auth.getName(), roles);

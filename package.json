@@ -2,7 +2,10 @@
   "name": "mentorlink",
   "private": true,
   "version": "1.0.0",
-  "description": "MentorLink - University Mentorship Platform",
+  "description": "MentorLink - local dev orchestrator only (not deployed to Railway)",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "start:dev": "concurrently -n backend,frontend,nlp -c blue,green,magenta \"npm run start:backend\" \"npm run start:frontend\" \"npm run start:nlp\"",
     "start:backend": "cd backend && mvn spring-boot:run",
@@ -12,7 +15,8 @@
     "check:backend": "mvn -f backend/pom.xml test",
     "check:frontend:test": "npm --prefix frontend run test:run",
     "check:frontend:lint": "npm --prefix frontend run lint",
-    "check:all": "npm run check:backend && npm run check:frontend:test && npm run check:frontend:lint"
+    "check:all": "npm run check:backend && npm run check:frontend:test && npm run check:frontend:lint",
+    "check:deploy": "node scripts/verify-railway-config.mjs"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

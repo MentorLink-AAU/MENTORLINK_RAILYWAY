@@ -1,0 +1,10 @@
+node_modules
+frontend/node_modules
+frontend/dist
+backend/target
+uploads
+backend/uploads
+.git
+.vscode
+*.md
+!backend/nlp-summarization/README.md

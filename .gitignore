@@ -1,8 +1,11 @@
-# Root dependencies/build outputs
+# Root dependencies/build outputs (never commit — breaks Railway/Railpack)
 node_modules/
+**/node_modules/
 frontend/node_modules/
 frontend/dist/
 backend/target/
+.npm/
+*.log
 
 # Runtime-generated uploads and recommender outputs
 uploads/

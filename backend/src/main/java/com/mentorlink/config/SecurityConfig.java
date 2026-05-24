@@ -37,14 +37,18 @@ public class SecurityConfig {
                 // Authorization rules
                 .authorizeHttpRequests(auth -> auth
 
-                        // 🔐 Change password requires auth (first-time login flow)
-                        .requestMatchers("/api/auth/change-password").authenticated()
-
-                        // 🔓 Public endpoints (login, register)
+                        // 🔓 Public auth endpoints only (login, register, password reset)
                         .requestMatchers(
-                                "/api/auth/**",
+                                "/api/auth/register/**",
+                                "/api/auth/login",
+                                "/api/auth/login/**",
+                                "/api/auth/forgot-password",
+                                "/api/auth/reset-password",
                                 "/actuator/**"
                         ).permitAll()
+
+                        // 🔐 Profile and password change require JWT
+                        .requestMatchers("/api/auth/**").authenticated()
 
                         // 👤 User endpoints (list/manage - admin only)
                         .requestMatchers("/api/users", "/api/users/**").hasRole("ADMIN")

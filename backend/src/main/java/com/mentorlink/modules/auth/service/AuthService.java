@@ -1,6 +1,8 @@
 package com.mentorlink.modules.auth.service;
 
 import com.mentorlink.common.dto.ApiResponse;
+import com.mentorlink.common.exception.ApiException;
+import org.springframework.http.HttpStatus;
 import com.mentorlink.modules.auth.dto.ChangePasswordRequest;
 import com.mentorlink.modules.auth.dto.LoginRequest;
 import com.mentorlink.modules.auth.dto.RegisterAdminRequest;
@@ -45,7 +47,7 @@ public class AuthService {
     // ✅ Register Student
     public ApiResponse<UserResponseDto> registerStudent(RegisterStudentRequest dto) {
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new RuntimeException("User already exists with email: " + dto.getEmail());
+            throw new ApiException(HttpStatus.CONFLICT, "EMAIL_EXISTS", "User already exists with this email");
         }
 
         User user = User.builder()
@@ -84,7 +86,7 @@ public class AuthService {
     // ✅ Register Faculty
     public ApiResponse<UserResponseDto> registerFaculty(RegisterFacultyRequest dto) {
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new RuntimeException("User already exists with email: " + dto.getEmail());
+            throw new ApiException(HttpStatus.CONFLICT, "EMAIL_EXISTS", "User already exists with this email");
         }
 
         User user = User.builder()
@@ -123,7 +125,7 @@ public class AuthService {
     // ✅ Register Admin
     public ApiResponse<UserResponseDto> registerAdmin(RegisterAdminRequest dto) {
         if (userRepository.findByEmail(dto.getEmail()).isPresent()) {
-            throw new RuntimeException("User already exists with email: " + dto.getEmail());
+            throw new ApiException(HttpStatus.CONFLICT, "EMAIL_EXISTS", "User already exists with this email");
         }
 
         User user = User.builder()

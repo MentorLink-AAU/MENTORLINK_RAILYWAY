@@ -3,6 +3,8 @@ package com.mentorlink.common.exception;
 import com.mentorlink.common.dto.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -25,6 +27,13 @@ public class GlobalExceptionHandler {
             IllegalStateException ex, HttpServletRequest request) {
         ApiError error = new ApiError("INVALID_STATE", ex.getMessage(), request.getRequestURI());
         return ResponseEntity.badRequest().body(ApiResponse.error(error));
+    }
+
+    @ExceptionHandler({BadCredentialsException.class, AuthenticationException.class})
+    public ResponseEntity<ApiResponse<Object>> handleAuthentication(
+            AuthenticationException ex, HttpServletRequest request) {
+        ApiError error = new ApiError("AUTH_FAILED", "Invalid email or password", request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.error(error));
     }
 
     // ✅ Handle validation errors

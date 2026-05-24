@@ -1,6 +1,7 @@
 # MentorLink API — Railway service config
 # Dashboard: Root Directory = backend, Config file = /backend/railway.toml
-# Attach MySQL plugin and set env vars (see application.properties).
+# Railpack: also reads backend/railpack.json (JDK 17: set RAILPACK_JDK_VERSION=17)
+# Attach MySQL plugin and set env vars (see railway.env.example).
 
 [build]
 builder = "NIXPACKS"

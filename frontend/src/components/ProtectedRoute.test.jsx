@@ -49,4 +49,24 @@ describe('ProtectedRoute', () => {
     renderGuardedRoute({ user: { role: 'ROLE_STUDENT' }, loading: false });
     expect(screen.getByText('Home Page')).toBeInTheDocument();
   });
+
+  it('shows loading spinner while auth is resolving', () => {
+    mockUseAuth.mockReturnValue({ user: null, loading: true });
+    render(
+      <MemoryRouter initialEntries={['/secure']}>
+        <Routes>
+          <Route
+            path="/secure"
+            element={
+              <ProtectedRoute roles={['ADMIN']}>
+                <div>Secure Content</div>
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(document.querySelector('.animate-spin')).toBeTruthy();
+    expect(screen.queryByText('Secure Content')).not.toBeInTheDocument();
+  });
 });

@@ -31,6 +31,8 @@ Deploy **three app services + MySQL**. Do not use the repository root (`/`) as a
 | **Root Directory** | `backend` |
 | **Config file** (Config-as-code) | `/backend/railway.toml` |
 
+Railpack also reads `backend/railpack.json`. Set **`RAILPACK_JDK_VERSION=17`** on this service (Java 17 project).
+
 3. **Variables** (minimum):
 
 ```
@@ -97,6 +99,14 @@ Uses **Dockerfile** (large image; first build may take several minutes).
 - [ ] Config file path is **`/backend/railway.toml`**, **`/frontend/railway.toml`**, or **`/backend/nlp-summarization/railway.toml`**.
 - [ ] Custom **Start Command** in the UI is **empty** (let `railway.toml` define it) unless you override on purpose.
 - [ ] No **Start Command** like `npm start` or `npm run start`.
+- [ ] Repo does **not** track `node_modules/` (run `npm run check:deploy` locally).
+
+## Verify before push
+
+```bash
+npm run check:deploy
+npm run check:all
+```
 
 ---
 
