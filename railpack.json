@@ -1,6 +1,0 @@
-{
-  "$schema": "https://schema.railpack.com",
-  "deploy": {
-    "startCommand": "echo 'ERROR: Railway Root Directory must be backend, frontend, or backend/nlp-summarization — not the repo root. See RAILWAY_SETUP.md.' && exit 1"
-  }
-}

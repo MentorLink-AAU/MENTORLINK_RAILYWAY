@@ -38,7 +38,8 @@ mustExist('frontend/package-lock.json', 'Frontend package-lock');
 mustExist('backend/nlp-summarization/railway.toml', 'NLP railway.toml');
 mustExist('backend/nlp-summarization/Dockerfile', 'NLP Dockerfile');
 mustExist('railway.env.example', 'Env template');
-mustExist('railpack.json', 'Root railpack guard');
+mustExist('railway.toml', 'Root railway.toml (backend from repo root)');
+mustExist('Dockerfile', 'Root Dockerfile (backend from repo root)');
 
 const rootPkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
 if (rootPkg.scripts?.start) {

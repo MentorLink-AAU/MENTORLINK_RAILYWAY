@@ -1,15 +1,31 @@
 # Railway setup (MentorLink)
 
-Deploy **three app services + MySQL**. Do not use the repository root (`/`) as a service.
+Deploy **MySQL + backend + frontend + NLP** (four pieces). You can start with **backend only** from the repo root, then add the other services.
 
-## Why builds fail
+## Quick start: one backend service (repo root)
+
+If your Railway service has an **empty** Root Directory (repo root):
+
+| Setting | Value |
+|---------|--------|
+| **Root Directory** | *(leave empty)* |
+| **Config file** | `/railway.toml` |
+
+Railway builds **`Dockerfile`** at the repo root (Spring Boot JAR). **Do not** set a custom Start Command.
+
+Add **MySQL** + variables from `railway.env.example`, then **Redeploy**.
+
+## Full stack (recommended)
+
+Use **three app services** with subfolder roots (below). Required for the React UI and NLP service.
+
+## Why builds failed before
 
 | Symptom | Cause |
 |---------|--------|
-| `concurrently: Permission denied` | Root Directory is `/` and Railway runs `npm start` (local dev only). |
-| `Set Railway Root Directory to backend...` | Config file is `/railway.toml` (removed) or build runs from repo root. |
-
-**Fix:** set **Root Directory** and **Config file path** on each service (below).
+| `concurrently: Permission denied` | Root Directory `/` + `npm start` (local dev only). |
+| `No start command detected` | Root `package.json` has no production `start` script. |
+| `Railway Root Directory must be backend...` | Old root `railpack.json` guard (removed). Use root `Dockerfile` or set Root Directory to `backend`. |
 
 ---
 
@@ -23,7 +39,11 @@ Deploy **three app services + MySQL**. Do not use the repository root (`/`) as a
 
 ## 2. Backend (Spring Boot)
 
-1. **+ New** → **GitHub Repo** → same repo (or **Empty Service** + connect repo).
+**Option A — repo root (easiest):** see [Quick start](#quick-start-one-backend-service-repo-root) above.
+
+**Option B — `backend/` folder (Maven/Railpack):**
+
+1. **+ New** → **GitHub Repo** → same repo.
 2. Open the service → **Settings**:
 
 | Setting | Value |
@@ -31,7 +51,7 @@ Deploy **three app services + MySQL**. Do not use the repository root (`/`) as a
 | **Root Directory** | `backend` |
 | **Config file** (Config-as-code) | `/backend/railway.toml` |
 
-Railpack also reads `backend/railpack.json`. Set **`RAILPACK_JDK_VERSION=17`** on this service (Java 17 project).
+Railpack reads `backend/railpack.json`. Set **`RAILPACK_JDK_VERSION=17`** on this service.
 
 3. **Variables** (minimum):
 
@@ -95,8 +115,8 @@ Uses **Dockerfile** (large image; first build may take several minutes).
 
 ## Checklist per service
 
-- [ ] Root Directory is **not** empty (not repo root unless you know what you're doing).
-- [ ] Config file path is **`/backend/railway.toml`**, **`/frontend/railway.toml`**, or **`/backend/nlp-summarization/railway.toml`**.
+- [ ] **Backend:** either empty root + `/railway.toml` **or** `backend` + `/backend/railway.toml`.
+- [ ] **Frontend/NLP:** Root Directory + config file match [sections 3–4](#3-frontend-vite) (not repo root).
 - [ ] Custom **Start Command** in the UI is **empty** (let `railway.toml` define it) unless you override on purpose.
 - [ ] No **Start Command** like `npm start` or `npm run start`.
 - [ ] Repo does **not** track `node_modules/` (run `npm run check:deploy` locally).
