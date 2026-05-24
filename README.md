@@ -1,6 +1,10 @@
 # MentorLink
 
 <p align="center">
+  <a href="https://github.com/MentorLink-AAU/MENTORLINK_RAILYWAY">GitHub — MENTORLINK_RAILYWAY</a>
+</p>
+
+<p align="center">
   <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&pause=1000&center=true&vCenter=true&width=980&lines=MentorLink+-+University+Project+Mentorship+Platform;Role-Based+Project+Lifecycle+Management;Faculty+Recommendation+Engine+(TF-IDF+%2B+Cosine+Similarity);LLM-Based+Academic+PDF+Summarization+(LongT5);Real-Time+Notifications+via+WebSocket+STOMP" alt="MentorLink animated header" />
 </p>
 
@@ -33,6 +37,7 @@ It combines:
 - [4. Repository Structure](#4-repository-structure)
 - [5. Tech Stack](#5-tech-stack)
 - [6. Quick Start](#6-quick-start)
+  - [6.7 Deploy on Railway](#67-deploy-on-railway)
 - [7. Configuration and Environment Variables](#7-configuration-and-environment-variables)
 - [8. API Map](#8-api-map)
 - [9. Workflow Deep Dive](#9-workflow-deep-dive)
@@ -84,7 +89,7 @@ MentorLink addresses these issues through a structured, role-aware system that s
 - Auto-grouping after deadline using cosine similarity over student profile signals.
 - Asynchronous PDF summarization via LongT5.
 - Real-time notifications with STOMP over WebSocket/SockJS.
-- **Email:** HTML templates (Thymeleaf), MIME mail, `@Async` sending for welcome, password reset, deadline reminders, and faculty decision mail—**SMTP credentials must be supplied via environment variables** (see [§7](#7-configuration-and-environment-variables)).
+- **Email:** HTML templates (Thymeleaf), MIME mail, `@Async` sending for welcome, password reset, deadline reminders, and faculty decision mail—**SMTP credentials must be supplied via environment variables** (see [section 7](#7-configuration-and-environment-variables)).
 - Forgot/reset password with expiring one-time token.
 
 ### 2.3 Frontend (dashboard UI)
@@ -161,6 +166,12 @@ mentorlink/
 |  |- src/lib/api.js              # Axios client and endpoint wrappers
 |- uploads/                       # Stored files (runtime)
 |- package.json                   # Root orchestrator (concurrently: backend + frontend + NLP)
+|- railway.env.example            # Production env variable template (Railway)
+|- backend/railway.toml           # Railway config for API service
+|- frontend/railway.toml          # Railway config for frontend service
+|- backend/nlp-summarization/
+|  |- railway.toml                # Railway config (Docker build)
+|  |- Dockerfile
 ```
 
 ---
@@ -245,6 +256,28 @@ mvn -f backend/pom.xml clean test
 
 Running `mvn` in `mentorlink/` without `-f` will fail with “no POM in this directory”.
 
+### 6.7 Deploy on Railway
+
+Production deploy uses **three Railway services** plus **MySQL** (plugin). Config-as-code lives in `railway.toml` per service.
+
+| Service | Root directory | Config file |
+|---|---|---|
+| Backend (Spring Boot) | `backend` | `/backend/railway.toml` |
+| Frontend (Vite static) | `frontend` | `/frontend/railway.toml` |
+| NLP (Flask + LongT5) | `backend/nlp-summarization` | `/backend/nlp-summarization/railway.toml` |
+| MySQL | Railway plugin | — |
+
+**Steps**
+
+1. Create a Railway project from [MentorLink-AAU/MENTORLINK_RAILYWAY](https://github.com/MentorLink-AAU/MENTORLINK_RAILYWAY).
+2. Add **MySQL** and link its variables to the backend service.
+3. Create the three app services with the root directories and config paths above.
+4. Set variables from [`railway.env.example`](railway.env.example) (especially `JWT_SECRET`, `CORS_ALLOWED_ORIGINS`, `APP_FRONTEND_URL`, `NLP_SUMMARIZATION_URL`, database credentials, `MAIL_*`).
+5. On the **frontend** service, set build variable **`VITE_API_URL`** to the backend public URL.
+6. Generate public domains for each service; update backend CORS and frontend/API URLs to match.
+
+**Local database password:** `application.properties` no longer stores credentials. For local MySQL, set `MYSQLPASSWORD` or `SPRING_DATASOURCE_PASSWORD` in your environment before starting the backend.
+
 ---
 
 ## 7. Configuration and Environment Variables
@@ -261,16 +294,25 @@ Key properties include:
 
 ### 7.2 Recommended Environment Variables
 
+See [`railway.env.example`](railway.env.example) for a copy-paste template.
+
 | Variable | Purpose | Example |
 |---|---|---|
-| `JWT_SECRET` | JWT signing key (use strong 32+ char secret) | `your-very-long-secret` |
+| `JWT_SECRET` | JWT signing key (32+ characters) | `your-very-long-secret` |
+| `SPRING_DATASOURCE_URL` | JDBC URL (production) | `jdbc:mysql://host:3306/db?...` |
+| `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD` | DB credentials | — |
+| `MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLDATABASE` | Alternative when using Railway MySQL plugin | — |
+| `MYSQLPASSWORD` | Local dev DB password (if not using `SPRING_DATASOURCE_*`) | — |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated frontend origins | `http://localhost:3000` |
 | `MAIL_USERNAME` | Sender email for SMTP | `you@example.com` |
-| `MAIL_PASSWORD` | SMTP password/app password | `xxxx xxxx xxxx xxxx` |
+| `MAIL_PASSWORD` | SMTP password/app password | app password |
 | `MAIL_HOST` | SMTP host | `smtp.gmail.com` |
 | `MAIL_PORT` | SMTP port | `587` |
 | `APP_FRONTEND_URL` | Base URL for password reset links | `http://localhost:3000` |
 | `NLP_SUMMARIZATION_URL` | NLP Flask service URL | `http://localhost:5001` |
 | `UPLOAD_DIR` | Uploaded file storage location | `../uploads` |
+| `VITE_API_URL` | Frontend build-time API base (production) | `https://api.example.com` |
+| `PORT` | HTTP port (set by Railway in production) | `8080` |
 
 ### 7.3 Security Note
 
@@ -533,7 +575,13 @@ mvn test
 
 ### 14.2 Frontend Tests
 
-No automated frontend test suite is currently committed. Add unit/integration tests as the next quality milestone.
+Vitest + Testing Library are configured under `frontend/`.
+
+```bash
+npm run check:frontend:test
+# or
+npm --prefix frontend run test:run
+```
 
 ---
 
@@ -542,10 +590,10 @@ No automated frontend test suite is currently committed. Add unit/integration te
 <details>
 <summary><strong>Backend fails with MySQL connection refused</strong></summary>
 
-Ensure MySQL is running and matches:
-- `spring.datasource.url`
-- `spring.datasource.username`
-- `spring.datasource.password`
+Ensure MySQL is running and set:
+- `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, or
+- `MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLDATABASE`, or
+- `MYSQLPASSWORD` for local defaults in `application.properties`
 
 </details>
 
@@ -603,10 +651,10 @@ The API returns a generic success message for security. Check backend logs and S
 
 ## 17. Roadmap
 
-- Add frontend automated testing (unit + e2e).
+- Expand frontend test coverage (e2e and critical flows).
 - Add observability dashboard (metrics/traces).
 - Add fairness-aware recommendation and explainability overlays.
-- Add containerized deployment profiles.
+- Harden Railway/production ops (volumes for uploads, health checks, staging env).
 - Expand chat module from entity-only persistence to full real-time flow.
 - Add optional classifier module for AI vs human text detection.
 
@@ -635,9 +683,3 @@ This project is distributed under the MIT License unless replaced by your instit
 <p align="center">
   Built for smarter academic mentorship workflows.
 </p>
-#   M E N T O R L I N K _ R A I L Y W A Y  
- #   M E N T O R L I N K _ R A I L Y W A Y  
- #   M E N T O R L I N K _ R A I L Y W A Y  
- #   M E N T O R L I N K _ R A I L Y W A Y  
- #   M E N T O R L I N K _ R A I L Y W A Y  
- 
