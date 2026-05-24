@@ -214,10 +214,10 @@ This installs:
 - root and frontend npm packages,
 - Python dependencies in `backend/nlp-summarization/requirements.txt`.
 
-### 6.3 Start Full System
+### 6.3 Start Full System (local development only)
 
 ```bash
-npm run start
+npm run start:dev
 ```
 
 This runs concurrently:
@@ -267,11 +267,19 @@ Production deploy uses **three Railway services** plus **MySQL** (plugin). Confi
 | NLP (Flask + LongT5) | `backend/nlp-summarization` | `/backend/nlp-summarization/railway.toml` |
 | MySQL | Railway plugin | — |
 
+**Important:** Do **not** deploy the repository root (`/`). Railway will run `npm start` and fail. Each app must be its own service with the **Root Directory** and **config file** below.
+
 **Steps**
 
 1. Create a Railway project from [MentorLink-AAU/MENTORLINK_RAILYWAY](https://github.com/MentorLink-AAU/MENTORLINK_RAILYWAY).
 2. Add **MySQL** and link its variables to the backend service.
-3. Create the three app services with the root directories and config paths above.
+3. Create **three** app services (not one) with these settings:
+
+| Service | Root Directory | Config file path |
+|---|---|---|
+| API | `backend` | `/backend/railway.toml` |
+| UI | `frontend` | `/frontend/railway.toml` |
+| NLP | `backend/nlp-summarization` | `/backend/nlp-summarization/railway.toml` |
 4. Set variables from [`railway.env.example`](railway.env.example) (especially `JWT_SECRET`, `CORS_ALLOWED_ORIGINS`, `APP_FRONTEND_URL`, `NLP_SUMMARIZATION_URL`, database credentials, `MAIL_*`).
 5. On the **frontend** service, set build variable **`VITE_API_URL`** to the backend public URL.
 6. Generate public domains for each service; update backend CORS and frontend/API URLs to match.
@@ -326,7 +334,7 @@ See [`railway.env.example`](railway.env.example) for a copy-paste template.
 | Templates | `backend/src/main/resources/templates/email/` — Thymeleaf HTML for password reset, welcome, deadline reminder, faculty approval/rejection. |
 | Rendering | `EmailTemplateService` builds HTML via `ITemplateEngine`. |
 | Delivery | `EmailNotificationService` uses `MimeMessage` + `MimeMessageHelper` (UTF-8, HTML body) and `@Async` methods so HTTP handlers are not blocked. |
-| Config | Set `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` before starting the backend (same shell as `npm run start`, or system env). Gmail typically requires an [App Password](https://myaccount.google.com/apppasswords). |
+| Config | Set `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` before starting the backend (same shell as `npm run start:dev`, or system env). Gmail typically requires an [App Password](https://myaccount.google.com/apppasswords). |
 
 ---
 
@@ -610,7 +618,7 @@ Check:
 <details>
 <summary><strong>Emails not sent (e.g. after registration)</strong></summary>
 
-1. Set **`MAIL_USERNAME`** and **`MAIL_PASSWORD`** in the environment **before** starting the backend (child process of `npm run start` inherits the parent shell’s env on Windows/macOS/Linux).
+1. Set **`MAIL_USERNAME`** and **`MAIL_PASSWORD`** in the environment **before** starting the backend (child process of `npm run start:dev` inherits the parent shell’s env on Windows/macOS/Linux).
 2. Restart the stack so Spring picks up the variables.
 3. Check backend logs: you should see **`Email configured for outbound mail from: …`** on startup; if you see **`spring.mail.username is empty`**, mail is disabled and welcome mail is **skipped by design**.
 4. Check the recipient’s **Spam** folder.

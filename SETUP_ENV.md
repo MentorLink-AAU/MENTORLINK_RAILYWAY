@@ -33,7 +33,7 @@ Get-Content backend/.env | ForEach-Object {
     $name, $value = $_ -split '=', 2
     [System.Environment]::SetEnvironmentVariable($name, $value, 'Process')
   }
-}; npm run start
+}; npm run start:dev
 ```
 
 This loads backend env vars into the current shell process and starts frontend + backend + NLP using the existing root script.
