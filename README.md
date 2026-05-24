@@ -267,7 +267,9 @@ Production deploy uses **three Railway services** plus **MySQL** (plugin). Confi
 | NLP (Flask + LongT5) | `backend/nlp-summarization` | `/backend/nlp-summarization/railway.toml` |
 | MySQL | Railway plugin | — |
 
-**Important:** Do **not** deploy the repository root (`/`). Railway will run `npm start` and fail. Each app must be its own service with the **Root Directory** and **config file** below.
+**Important:** Do **not** deploy the repository root (`/`). Each app must be its own service. On **every** service you must set both **Root Directory** and **Config file** (Config-as-code). If the config file is wrong, the build will fail or run `npm` by mistake.
+
+Full checklist: **[RAILWAY_SETUP.md](RAILWAY_SETUP.md)**.
 
 **Steps**
 
