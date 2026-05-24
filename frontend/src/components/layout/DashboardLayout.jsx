@@ -12,7 +12,7 @@ export function DashboardLayout() {
   const location = useLocation();
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-mentor-surface via-white to-mentor-surface">
+    <div className="flex min-h-screen bg-gradient-to-br from-mentor-surface via-mentor-card to-mentor-surface">
       <Sidebar
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}

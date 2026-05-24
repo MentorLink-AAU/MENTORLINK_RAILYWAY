@@ -12,6 +12,7 @@ import {
   Calendar,
   Sparkles,
   BarChart3,
+  ClipboardList,
   ChevronsLeft,
   ChevronsRight,
   UsersRound,
@@ -129,6 +130,9 @@ export function Sidebar({ mobileOpen, onClose, collapsed, onToggleCollapse }) {
               </NavItem>
               <NavItem to="/admin/analytics" icon={BarChart3} onNavigate={closeIfMobile} collapsed={collapsed} label="Analytics">
                 Analytics
+              </NavItem>
+              <NavItem to="/admin/meeting-logs" icon={ClipboardList} onNavigate={closeIfMobile} collapsed={collapsed} label="Meeting logs">
+                Meeting logs
               </NavItem>
               <NavItem to="/admin/upload" icon={Upload} onNavigate={closeIfMobile} collapsed={collapsed} label="Upload">
                 Upload

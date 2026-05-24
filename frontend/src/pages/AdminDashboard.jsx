@@ -13,6 +13,7 @@ import {
   ChevronUp,
   Upload,
   Sparkles,
+  ClipboardList,
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import { PageHeader } from '../components/ui/PageHeader';
@@ -218,6 +219,7 @@ export function AdminDashboard() {
         {[
           { to: '/admin/users', title: 'Manage users', desc: 'View, add, remove users', icon: Users },
           { to: '/admin/analytics', title: 'Analytics', desc: 'Platform analytics', icon: BarChart3 },
+          { to: '/admin/meeting-logs', title: 'Meeting logs', desc: 'View latest group meeting updates', icon: ClipboardList },
           { to: '/admin/deadlines', title: 'Deadlines', desc: 'Manage deadlines', icon: Calendar },
           { to: '/admin/upload', title: 'Bulk upload', desc: 'Upload students/faculty Excel', icon: Upload },
           { to: '/admin/auto-group', title: 'Auto-group', desc: 'Auto-group from Excel', icon: Sparkles },

@@ -17,6 +17,23 @@
   --mentor-warning: #d97706;
 }
 
+[data-theme='dark'] {
+  --mentor-primary: #60a5fa;
+  --mentor-primary-dark: #3b82f6;
+  --mentor-secondary: #c4b5fd;
+  --mentor-accent: #38bdf8;
+  --mentor-surface: #020617;
+  --mentor-card: #0f172a;
+  --mentor-text: #e2e8f0;
+  --mentor-text-muted: #94a3b8;
+  --mentor-sidebar: #020617;
+  --mentor-sidebar-border: #1e293b;
+  --mentor-border: #1e293b;
+  --mentor-danger: #f87171;
+  --mentor-success: #34d399;
+  --mentor-warning: #fbbf24;
+}
+
 @theme inline {
   --color-mentor-primary: var(--mentor-primary);
   --color-mentor-primary-dark: var(--mentor-primary-dark);
@@ -42,6 +59,7 @@ body {
   background: var(--mentor-surface);
   min-height: 100vh;
   color: var(--mentor-text);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 #root {

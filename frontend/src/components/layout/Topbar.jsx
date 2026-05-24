@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, LogOut, Bell, ChevronDown, Search } from 'lucide-react';
+import { Menu, LogOut, Bell, ChevronDown, Search, Moon, Sun } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotificationContext } from '../../context/NotificationProvider';
+import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 export function Topbar({ onMenuClick }) {
   const { user, logout, isAdmin, isStudent, isFaculty } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const { notifications, unreadCount, markAsRead } = useNotificationContext();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -82,6 +84,16 @@ export function Topbar({ onMenuClick }) {
       </form>
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={toggleTheme}
+          aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+          title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+        >
+          {isDark ? <Sun className="h-5 w-5 text-mentor-text" /> : <Moon className="h-5 w-5 text-mentor-text" />}
+        </Button>
         <div className="relative">
           <Button
             type="button"

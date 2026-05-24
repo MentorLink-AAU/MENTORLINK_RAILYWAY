@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from 'rea
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationProvider';
 import { ToastProvider } from './context/ToastContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Layout } from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Landing } from './pages/Landing';
@@ -23,6 +24,7 @@ import { JoinGroup } from './pages/JoinGroup';
 import { Deadlines } from './pages/Deadlines';
 import { AdminUsers } from './pages/AdminUsers';
 import { AdminAnalytics } from './pages/AdminAnalytics';
+import { AdminMeetingLogs } from './pages/AdminMeetingLogs';
 import { AdminDeadlines } from './pages/AdminDeadlines';
 import { AdminUpload } from './pages/AdminUpload';
 import { AdminAutoGroup } from './pages/AdminAutoGroup';
@@ -76,45 +78,48 @@ function RootRoute() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <NotificationProvider>
-      <ToastProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/" element={<RootRoute />}>
-            <Route index element={<HomeRedirect />} />
-            <Route path="change-password" element={<ChangePassword />} />
-            <Route path="dashboard/student" element={<ProtectedRoute roles={['STUDENT']}><StudentDashboard /></ProtectedRoute>} />
-            <Route path="dashboard/faculty" element={<ProtectedRoute roles={['FACULTY']}><FacultyDashboard /></ProtectedRoute>} />
-            <Route path="dashboard/admin" element={<ProtectedRoute roles={['ADMIN']}><AdminDashboard /></ProtectedRoute>} />
-            <Route path="notifications" element={<Notifications />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="projects" element={<ProtectedRoute roles={['STUDENT']}><Projects /></ProtectedRoute>} />
-            <Route path="projects/:projectId" element={<ProjectDetail />} />
-            <Route path="groups/:groupId" element={<GroupDetail />} />
-            <Route path="groups/create" element={<ProtectedRoute roles={['STUDENT']}><CreateGroup /></ProtectedRoute>} />
-            <Route path="groups/join" element={<JoinGroup />} />
-            <Route path="deadlines" element={<Deadlines />} />
-            <Route path="student/groups" element={<ProtectedRoute roles={['STUDENT']}><StudentGroups /></ProtectedRoute>} />
-            <Route path="faculty/projects" element={<ProtectedRoute roles={['FACULTY']}><FacultyProjects /></ProtectedRoute>} />
-            <Route path="faculty/students" element={<ProtectedRoute roles={['FACULTY']}><FacultyStudents /></ProtectedRoute>} />
-            <Route path="faculty/recommendations" element={<ProtectedRoute roles={['FACULTY']}><FacultyRecommendations /></ProtectedRoute>} />
-            <Route path="admin/users" element={<ProtectedRoute roles={['ADMIN']}><AdminUsers /></ProtectedRoute>} />
-            <Route path="admin/analytics" element={<ProtectedRoute roles={['ADMIN']}><AdminAnalytics /></ProtectedRoute>} />
-            <Route path="admin/deadlines" element={<ProtectedRoute roles={['ADMIN']}><AdminDeadlines /></ProtectedRoute>} />
-            <Route path="admin/upload" element={<ProtectedRoute roles={['ADMIN']}><AdminUpload /></ProtectedRoute>} />
-            <Route path="admin/auto-group" element={<ProtectedRoute roles={['ADMIN']}><AdminAutoGroup /></ProtectedRoute>} />
-            <Route path="admin/groups/:groupId" element={<ProtectedRoute roles={['ADMIN']}><AdminGroupDetail /></ProtectedRoute>} />
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-      </ToastProvider>
-      </NotificationProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <NotificationProvider>
+        <ToastProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/" element={<RootRoute />}>
+              <Route index element={<HomeRedirect />} />
+              <Route path="change-password" element={<ChangePassword />} />
+              <Route path="dashboard/student" element={<ProtectedRoute roles={['STUDENT']}><StudentDashboard /></ProtectedRoute>} />
+              <Route path="dashboard/faculty" element={<ProtectedRoute roles={['FACULTY']}><FacultyDashboard /></ProtectedRoute>} />
+              <Route path="dashboard/admin" element={<ProtectedRoute roles={['ADMIN']}><AdminDashboard /></ProtectedRoute>} />
+              <Route path="notifications" element={<Notifications />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="projects" element={<ProtectedRoute roles={['STUDENT']}><Projects /></ProtectedRoute>} />
+              <Route path="projects/:projectId" element={<ProjectDetail />} />
+              <Route path="groups/:groupId" element={<GroupDetail />} />
+              <Route path="groups/create" element={<ProtectedRoute roles={['STUDENT']}><CreateGroup /></ProtectedRoute>} />
+              <Route path="groups/join" element={<JoinGroup />} />
+              <Route path="deadlines" element={<Deadlines />} />
+              <Route path="student/groups" element={<ProtectedRoute roles={['STUDENT']}><StudentGroups /></ProtectedRoute>} />
+              <Route path="faculty/projects" element={<ProtectedRoute roles={['FACULTY']}><FacultyProjects /></ProtectedRoute>} />
+              <Route path="faculty/students" element={<ProtectedRoute roles={['FACULTY']}><FacultyStudents /></ProtectedRoute>} />
+              <Route path="faculty/recommendations" element={<ProtectedRoute roles={['FACULTY']}><FacultyRecommendations /></ProtectedRoute>} />
+              <Route path="admin/users" element={<ProtectedRoute roles={['ADMIN']}><AdminUsers /></ProtectedRoute>} />
+              <Route path="admin/analytics" element={<ProtectedRoute roles={['ADMIN']}><AdminAnalytics /></ProtectedRoute>} />
+              <Route path="admin/meeting-logs" element={<ProtectedRoute roles={['ADMIN']}><AdminMeetingLogs /></ProtectedRoute>} />
+              <Route path="admin/deadlines" element={<ProtectedRoute roles={['ADMIN']}><AdminDeadlines /></ProtectedRoute>} />
+              <Route path="admin/upload" element={<ProtectedRoute roles={['ADMIN']}><AdminUpload /></ProtectedRoute>} />
+              <Route path="admin/auto-group" element={<ProtectedRoute roles={['ADMIN']}><AdminAutoGroup /></ProtectedRoute>} />
+              <Route path="admin/groups/:groupId" element={<ProtectedRoute roles={['ADMIN']}><AdminGroupDetail /></ProtectedRoute>} />
+            </Route>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+        </ToastProvider>
+        </NotificationProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
