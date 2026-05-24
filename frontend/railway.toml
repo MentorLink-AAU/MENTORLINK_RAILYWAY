@@ -1,0 +1,13 @@
+# MentorLink frontend — Railway static service
+# Dashboard: Root Directory = frontend, Config file = /frontend/railway.toml
+# Build variable: VITE_API_URL = https://<your-backend>.up.railway.app
+
+[build]
+builder = "NIXPACKS"
+buildCommand = "npm ci && npm run build"
+watchPatterns = ["frontend/**"]
+
+[deploy]
+startCommand = "npx --yes serve -s dist -l $PORT"
+healthcheckPath = "/"
+restartPolicyType = "ON_FAILURE"

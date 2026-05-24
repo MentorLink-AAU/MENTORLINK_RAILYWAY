@@ -1,0 +1,13 @@
+# NLP summarization (Flask) — use Dockerfile due to torch/transformers size
+# Dashboard: Root Directory = backend/nlp-summarization
+# Config file = /backend/nlp-summarization/railway.toml
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
